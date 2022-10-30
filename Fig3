@@ -1,0 +1,261 @@
+rm(list=ls())  # clear memory
+
+
+library(tidyverse)
+library(bayesplot)
+library(deSolve)
+library(readxl)
+library(wesanderson)
+library(plyr)
+library(latex2exp)
+options(warn = -1)
+
+fit_H5N1 <- readRDS("~/Desktop/OneDrive - The University of Melbourne/work3/R code/fit_Model_H5N1_fixed_latent.rds")
+
+posterior_samples_all.HP = rstan::extract(fit_H5N1, pars = c("log10_theta_HP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.HP = rstan::extract(fit_H5N1, pars = c("log10_theta_HP"))
+
+posterior_samples_all.LP = rstan::extract(fit_H5N1, pars = c("log10_theta_LP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.LP = rstan::extract(fit_H5N1, pars = c("log10_theta_LP"))
+
+
+
+
+
+fit_H1N1 <- readRDS("~/Desktop/OneDrive - The University of Melbourne/work3/R code/fit_Model_H1N1_2710.rds")
+
+
+posterior_samples_all.HP = rstan::extract(fit_H1N1, pars = c("log10_theta_HP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.HP = rstan::extract(fit_H1N1, pars = c("log10_theta_HP"))
+
+posterior_samples_all.LP = rstan::extract(fit_H1N1, pars = c("log10_theta_LP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.LP = rstan::extract(fit_H1N1, pars = c("log10_theta_LP"))
+
+
+# show markov chains
+#library(bayesplot)
+#color_scheme_set("brewer-Spectral")
+#mcmc_trace(posterior_samples_all, n_warmup = 1000,
+#           facet_args = list(nrow = 2))
+
+
+
+# show all marginal posterior distributions
+posterior_sample_table.HP <-   data.frame(sV = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,1],
+                                          beta = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,2],
+                                          q_FI = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,3],
+                                          q_FM = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,4],
+                                          kappa_A = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,5],
+                                          sM = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,6],
+                                          q_prime = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,7],
+                                          V0 = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,8])
+
+
+
+
+posterior_sample_table.LP <-   data.frame(sV = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,1],
+                                          beta = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,2],
+                                          q_FI = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,3],
+                                          q_FM = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,4],
+                                          kappa_A = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,5],
+                                          q_prime = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,6])
+
+
+
+Type <- as.character(c("HP", "LP"),
+                     levels = c("HP", "LP"))
+
+ 
+parameters <- factor(seq(1,6,by =1), 
+                     levels = seq(1,6,by =1))
+
+parameters_names <- list(
+  '1'=TeX("$\\log_{10}(\\beta_{HP} / \\beta_{LP})$"),
+  '2'=TeX("$\\log_{10}(\\q_{FI,HP} / \\q_{FI,LP})$"),
+  '3'=TeX("$\\log_{10}(\\q_{FM,HP} / \\q_{FM,LP})$"),
+  '4'=TeX("$\\log_{10}(\\s_{V,HP} / \\s_{V,LP})$"),
+  '5'=TeX("$\\log_{10}(\\q'_{HP} / q'_{LP})$"),
+  '6'=TeX("$\\log_{10}(\\kappa_{A,HP} / \\kappa_{A,LP})$")
+)
+
+parameters_labeller <- function(variable,value){
+  return(parameters_names[value])
+}
+
+# all parameter comparsion
+beta.HP <-  10^posterior_sample_table.HP$beta
+beta.LP <- 10^posterior_sample_table.LP$beta
+beta.comparison <-  log10(beta.HP / beta.LP)
+beta.comparsion.median <- median(beta.comparison,na.rm = TRUE)
+
+qFI.HP <-  10^posterior_sample_table.HP$q_FI
+qFI.LP <- 10^posterior_sample_table.LP$q_FI
+qFI.comparison <-  log10(qFI.HP / qFI.LP)
+qFI.comparsion.median <- median(qFI.comparison,na.rm = TRUE)
+
+qFM.HP <-  10^posterior_sample_table.HP$q_FM
+qFM.LP <- 10^posterior_sample_table.LP$q_FM
+qFM.comparison <-  log10(qFM.HP / qFM.LP)
+qFM.comparsion.median <- median(qFM.comparison,na.rm = TRUE)
+
+sV.HP <-  10^posterior_sample_table.HP$sV
+sV.LP <- 10^posterior_sample_table.LP$sV
+sV.comparison <-  log10(sV.HP / sV.LP)
+sV.comparsion.median <- median(sV.comparison,na.rm = TRUE)
+
+kappaA.HP <-  10^posterior_sample_table.HP$kappa_A
+kappaA.LP <- 10^posterior_sample_table.LP$kappa_A
+kappaA.comparison <-  log10(kappaA.HP / kappaA.LP)
+kappaA.comparsion.median <- median(kappaA.comparison,na.rm = TRUE)
+
+qprime.HP <-  10^posterior_sample_table.HP$q_prime
+qprime.LP <- 10^posterior_sample_table.LP$q_prime
+qprime.comparison <-  log10(qprime.HP / qprime.LP)
+qprime.comparsion.median <- median(qprime.comparison,na.rm = TRUE)
+
+ 
+posterior.df <- data.frame( data = c(beta.comparison,
+                                     qFI.comparison,
+                                     qFM.comparison,
+                                     sV.comparison,
+                                     qprime.comparison,
+                                     kappaA.comparison),
+                            para = rep(parameters, each = length(beta.comparison))
+                            )
+
+posterior.df$group <- ifelse(posterior.df$data < 0, "less", ifelse(posterior.df$data >=0, "greater","less"))
+
+
+posterior.median.df <- data.frame(median = c(beta.comparsion.median,
+                                             qFI.comparsion.median,
+                                             qFM.comparsion.median,
+                                             sV.comparsion.median,
+                                             qprime.comparsion.median,
+                                             kappaA.comparsion.median),
+                              para = rep(parameters)
+                              )
+
+dat_text <- data.frame(
+  label = as.character(round(posterior.median.df$median,2)),
+  para  = factor(seq(1,6,1)),
+  x     = posterior.median.df$median,
+  y     = rep(1,6))
+
+
+
+  ggplot() +
+  geom_histogram(data = posterior.df, aes(x = data, y = stat(count) / max(count), group = para, fill = stat(x) < 0),  bins = 20, alpha = 0.8) +
+  stat_ecdf(data = posterior.df, aes(data, group = para, color = "color"), geom = "step", lwd = 0.5) + 
+  geom_vline(data = posterior.median.df, aes(xintercept=median, group = para),
+              linetype="dashed",alpha = 0.7) + 
+  theme_classic() + 
+  theme(axis.text.x = element_text(size = 15, face = "bold", color = "black"),
+        axis.title.x =  element_blank(),
+        axis.text.y = element_text(size = 15, face = "bold", color = "black"),
+        axis.title.y = element_text(size = 15,face = "bold", color = "black"),
+        legend.position = "none",
+        panel.grid.major = element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_text(size = 15),
+        strip.placement = "outside") +
+        #strip.background = element_rect(fill="white")) +
+  labs(y = "Frequency") + 
+  scale_color_manual(name = NULL,
+                      values = c("color" = "black"),
+                      labels = "CDF") +
+   scale_fill_manual(name = NULL,
+                     values = c("cadetblue",
+                                 "darkseagreen1"),
+                     labels = c("<0",
+                                ">0")) + 
+    facet_wrap( ~ para, scales = "free", labeller=parameters_labeller,strip.position = "bottom") +
+    theme(panel.spacing = unit(1, "lines")) + 
+    geom_text(
+      data    = dat_text,
+      mapping = aes(x = x, y = y, label = label),
+      size = 6) +   
+  guides(fill = "none")
+  
+  
+  
+  
+  
+  
+beta.proportion <- length(beta.comparison[beta.comparison <=0]) / length(beta.comparison) * 100
+qFI.proportion <- length(qFI.comparison[qFI.comparison <=0]) / length(qFI.comparison) * 100
+qFM.proportion <- length(qFM.comparison[qFM.comparison <=0]) / length(qFM.comparison) * 100
+sV.proportion <- length(sV.comparison[sV.comparison <=0]) / length(sV.comparison) * 100
+qprime.proportion <- length(qprime.comparison[qprime.comparison <=0]) / length(qprime.comparison) * 100
+kappaA.proportion <- length(kappaA.comparison[kappaA.comparison <=0]) / length(kappaA.comparison) * 100
+
+
+proportion.df <- data.frame(values = c(beta.proportion,
+                                       100 - beta.proportion,
+                                       qFI.proportion,
+                                       100 - qFI.proportion,
+                                       qFM.proportion,
+                                       100 - qFM.proportion,
+                                       sV.proportion,
+                                       100 - sV.proportion,
+                                       qprime.proportion,
+                                       100 - qprime.proportion,
+                                       kappaA.proportion,
+                                       100 - kappaA.proportion),
+                            values2 = rep(c("< 0", "> 0"), 2),
+                            para  = rep(factor(seq(1,6,1)), each = 2),
+                            zeros = rep(factor(c(1,0)), 2),
+                            x = c(-0.5,0.5,
+                                  -1.5,2,
+                                  -4,4,
+                                  -1,1,
+                                  -4,4,
+                                  -1.5,1.5),
+                            y = rep(c(0.25),12),
+                            y2 = rep(0.35, 12))
+                            
+  
+  
+  
+  
+# plot 2 # 
+    
+  ggplot() +
+    geom_histogram(data = posterior.df, aes(x = data, y = stat(count) / max(count), group = para, fill = stat(x) < 0),  bins =200, alpha = 0.8) +
+    stat_ecdf(data = posterior.df, aes(data, group = para, color = "color"), geom = "step", lwd = 0.5)  +
+    # geom_vline(data = posterior.median.df, aes(xintercept=median, group = para),
+    #            linetype="dashed",alpha = 0.7) + 
+     geom_vline(data = posterior.df, aes(xintercept = 0, group = para),
+                linetype="dashed", color = "black", alpha = 1) + 
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 15, face = "bold", color = "black"),
+          axis.title.x =  element_blank(),
+          axis.text.y = element_text(size = 15, face = "bold", color = "black"),
+          axis.title.y = element_text(size = 15,face = "bold", color = "black"),
+          legend.position = "none",
+          panel.grid.major = element_blank(),
+          strip.background = element_blank(),
+          strip.text.x = element_text(size = 15),
+          strip.placement = "outside") +
+    #strip.background = element_rect(fill="white")) +
+    labs(y = "Frequency") + 
+    scale_color_manual(name = NULL,
+                       values = c("color" = "black"),
+                       labels = "CDF") +
+    scale_fill_manual(name = NULL,
+                      values = c("cadetblue",
+                                 "darkseagreen1"),
+                      labels = c("<0",
+                                 ">0")) + 
+    facet_wrap( ~ para, scales = "free", labeller=parameters_labeller,strip.position = "bottom") +
+    theme(panel.spacing = unit(1, "lines")) + 
+    geom_text(
+      data    = proportion.df,
+      mapping = aes(x = x, y = y, label = paste0(round(values,1),"%"), group = zeros),
+      size = 6) +
+    geom_text(
+      data    = proportion.df,
+      mapping = aes(x = x, y = y2, label = values2, group = zeros),
+      size = 6) +
+    guides(fill = "none")
+  
+  
