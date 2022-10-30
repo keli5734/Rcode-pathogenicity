@@ -1,0 +1,223 @@
+library(tidyverse)
+library(readxl)
+library(wesanderson)
+library(plyr)
+library(latex2exp)
+library(ggplot2)
+library(ggridges)
+library(viridis)
+library(hrbrthemes)
+library(dplyr)
+library(lattice)
+library(RColorBrewer)
+library(viridisLite)
+library(tibble)
+library(tidyr)
+library(gridExtra)
+library(latticeExtra)
+library(gtable) 
+options(warn=-1)
+
+
+AUCD <- read_excel("~/Desktop/W3-revision-figures/Rplotdata/AUCD_H1N1.xls", col_names = c("HP", "LP"))
+
+# AUCD <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/AUCD_H1N1.xls")
+# AUCD.phi0 <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/AUCD_H1N1_phi0.xls")
+# AUCD.kappaF0 <- read_excel("~/Desktop/OneDrive - The University of Melbourne//DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/AUCD_H1N1_kappaF0.xls")
+
+
+len.para <- length(AUCD$HP)
+strain <-   factor(c("HP", "LP"), 
+                   levels = c("HP", "LP"))
+roles <- factor(c("1","2","3"),
+                levels = c("1", "2", "3"))
+
+# AUCD.HP.df <- data.frame(AUCD = c(AUCD$HP, AUCD.phi0$HP, AUCD.kappaF0$HP),
+#                        role = rep(roles, each = len.para))
+# 
+# 
+# AUCD.LP.df <- data.frame(AUCD = c(AUCD$LP, AUCD.phi0$LP, AUCD.kappaF0$LP),
+#                        role = rep(roles, each = len.para))
+# 
+# 
+# p.insert <- ggplot(data = AUCD.LP.df , aes(x = role, y = AUCD), fill = "white") + 
+#   geom_violin()+
+#   theme_classic() + 
+#   #scale_fill_brewer(palette = "PRGn") + 
+#   geom_boxplot(width=0.1) + 
+#   theme(legend.position="NA",
+#         plot.background=element_blank(),
+#         panel.border=element_blank(),
+#         panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         axis.title.x=element_blank(),
+#         axis.title.y=element_blank(),
+#         axis.text.x = element_text(size = 20, face = "bold", color = "black")) + 
+#   scale_y_continuous(limits = c(0,1),breaks=seq(0,1,by=0.5) ) + 
+#   scale_x_discrete(labels = c(TeX("$\\phi = 0.33, \\kappa_F = 3$"), TeX("$\\phi = 0, \\kappa_F = 3$"), TeX("$\\phi = 0.33, \\kappa_F = 0$")))
+# 
+# 
+# 
+# p.insert
+# 
+# 
+# 
+# p.main <- ggplot(data = AUCD.HP.df , aes(x = role, y = AUCD, fill = role)) + 
+#   geom_violin(scale = "width")+
+#   theme_minimal() + 
+#   scale_fill_brewer(palette = "PRGn") + 
+#   geom_boxplot(width=0.1) + 
+#   ylim(c(0,100)) + 
+#   theme(plot.background=element_blank(),
+#         panel.border=element_blank(),
+#         axis.text.x = element_text(size = 20, face = "bold", color = "black"), 
+#         axis.title.x = element_blank(),
+#         axis.text.y = element_text(size = 20, face = "bold", color = "black"), 
+#         axis.title.y = element_text(size = 20,face = "bold", color = "black"),
+#         plot.title = element_text(size = 20, face = "bold", color = "black", hjust = .5),
+#         legend.position= "NA") + 
+#   scale_x_discrete(labels = c(TeX("$\\phi = 0.33, \\kappa_F = 3$"), TeX("$\\phi = 0, \\kappa_F = 3$"), TeX("$\\phi = 0.33, \\kappa_F = 0$")))+
+#   labs(title = "Tissue Damage (H1N1 HP)",y = "% of damaged cells") 
+# 
+# p.main
+# 
+# 
+# ggdraw() +
+#   draw_plot(p.main2) +
+#   draw_plot(p.insert, x = 0.1,  y = 0.7, width = .3, height = .3)
+# 
+# 
+# 
+# 
+# AUCD.df1 <- data.frame(AUCD = c(AUCD$HP),
+#                      strain = rep("HP", len.para))
+# ggplot(data = AUCD.df1 , aes(x = strain, y = log10(AUCD), fill = strain)) + 
+#   geom_violin()+
+#   theme_minimal() + 
+#   scale_fill_brewer(palette="Dark2") + 
+#   geom_boxplot(width=0.1) + 
+#  # ylim(c(0,100)) + 
+#   theme( plot.background=element_blank(),
+#          panel.border=element_blank())
+# 
+# 
+# AUCD.df2 <- data.frame(AUCD = c(AUCD$LP),
+#                      strain = rep("LP", len.para))
+# ggplot(data = AUCD.df2 , aes(x = strain, y = AUCD, fill = strain)) + 
+#   geom_violin()+
+#   theme_minimal() + 
+#   scale_fill_brewer(palette="Dark2") + 
+#   geom_boxplot(width=0.1) + 
+#   ylim(c(0,100)) + 
+#   theme( plot.background=element_blank(),
+#          panel.border=element_blank())
+# 
+# 
+# 
+# 
+AUCD.df <- data.frame(AUCD = log10(c(AUCD$HP, AUCD$LP)),
+                     strain = rep(strain, each = len.para))
+
+my_comparisons  <- list( c("HP", "LP"))
+compare_means(AUCD ~ strain, data = AUCD.df)
+
+p.AUCD <- ggplot(data = AUCD.df , aes(x = strain, y = AUCD, group = strain, fill = strain)) + 
+  geom_violin(position = dodge, scale = "width",width = .6) +
+  theme_minimal() + 
+  scale_fill_brewer(palette = rev("YlGnBu")) + 
+  geom_boxplot(width=.1, outlier.colour=NA, position = dodge,aes(group = strain),fill = "white") + 
+  stat_compare_means(label =  "p.signif",  comparisons = my_comparisons, symnum.args = symnum.args, size = 10) + 
+  theme(plot.background=element_blank(),
+        panel.border=element_blank(),
+        axis.text.x = element_text(size = 30, face = "bold", color = "black"), 
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 30, face = "bold", color = "black"), 
+        axis.title.y = element_text(size = 30,face = "bold", color = "black"),
+        plot.title = element_text(size = 30, face = "bold", color = "black", hjust = .5),
+        legend.position = "none", 
+        legend.title=element_blank(),
+        legend.text=element_blank(),
+        panel.grid.major = element_blank()) + 
+  scale_y_continuous(limits = c(4.4,10), breaks=seq(5,9,by=2),labels=c("5", "7", "9") ) + 
+  labs(title = "Cumulative level of dead cells (H1N1)" ,y = TeX("$\\log10(cells \\cdot day)$"))  + 
+  scale_x_discrete(labels = c("HP","LP"))
+
+p.AUCD
+
+# 
+# 
+# 
+# p.main2 <- ggplot(data = AUCD.df3 , aes(x = strain, y = AUCD, fill = strain)) + 
+#   geom_violin(scale = "width")+
+#   theme_minimal() + 
+#   scale_fill_brewer(palette = "PRGn") + 
+#   geom_boxplot(width=0.1) + 
+#   ylim(c(0,100)) + 
+#   coord_flip() + 
+#   theme(plot.background=element_blank(),
+#         panel.border=element_blank(),
+#         axis.text.x = element_text(size = 20, face = "bold", color = "black"), 
+#         axis.title.x = element_blank(),
+#         axis.text.y = element_text(size = 20, face = "bold", color = "black"), 
+#         axis.title.y = element_text(size = 20,face = "bold", color = "black"),
+#         plot.title = element_text(size = 20, face = "bold", color = "black", hjust = .5),
+#         legend.position= "NA") + 
+#   # scale_x_discrete(labels = c(TeX("$\\phi = 0.33, \\kappa_F = 3$"), TeX("$\\phi = 0, \\kappa_F = 3$"), TeX("$\\phi = 0.33, \\kappa_F = 0$")))+
+#   labs(title = "Tissue Damage (H1N1 HP)",y = "% of damaged cells") 
+# 
+# 
+# 
+
+
+
+
+AUCD.all <- data.frame(AUCD = log10(c(AUCD$HP,
+                            AUCD.phi0$HP,
+                            AUCD.kappaF0$HP,
+                            AUCD$LP,
+                            AUCD.phi0$LP,
+                            AUCD.kappaF0$LP)),
+                     strain = rep(strain, each = 3 * len.para),
+                     role = rep(roles, each = len.para))
+                     #linetype= rep(c("1", "2"), c(len.para, len.para*2)))
+head(AUCD.all)
+
+text.color = c("black", "tan3", "tan3")
+dodge <- position_dodge(width = 0.5)
+
+my_comparisons1 <- list( c("1", "2"), c("2", "3"), c("1", "3") )
+my_comparisons2 <- list( c("HP", "LP"))
+#compare_means(AUCD ~ role, data = AUCD.all)
+#compare_means(AUCD ~ strain, group.by = "role", data = AUCD.all)
+
+symnum.args <- list(cutpoints = c(0, 0.0001, 0.01, 0.05, 1), symbols = c( "***", "**", "*", "ns"))
+
+  ggplot(data = AUCD.all , aes(x = role, y = AUCD, fill = strain)) + 
+  geom_violin(position = dodge, scale = "width") +
+  theme_minimal() + 
+  scale_fill_brewer(palette = rev("YlGnBu")) + 
+  geom_boxplot(width=.1, outlier.colour=NA, position = dodge,aes(group = interaction(role, strain)),fill = "white") + 
+  #stat_compare_means(label =  "p.signif",  comparisons = my_comparisons1, symnum.args = symnum.args, size = 6) + 
+  theme(plot.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 25, face = "bold", color = text.color), 
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 25, face = "bold", color = "black"), 
+        axis.title.y = element_text(size = 25,face = "bold", color = "black"),
+        plot.title = element_text(size = 25, face = "bold", color = "black", hjust = .5),
+        legend.position="right", legend.direction="vertical",
+        legend.title=element_text(colour="black",size = 25,  face = "bold"),
+        legend.text=element_text(colour="black", size = 25, face="bold")) + 
+  geom_vline(aes(xintercept = 1.5),
+               linetype="dashed", color = "black", size = 2)  + 
+  scale_y_continuous(limits = c(4,10), breaks=seq(5,9,by=2),labels=c("5", "7", "9") ) + 
+  scale_x_discrete(labels = c(TeX("$\\phi = 0.33, \\kappa_F = 3$"), TeX("$\\phi = 0, \\kappa_F = 3$"), TeX("$\\phi = 0.33, \\kappa_F = 0$"))) +
+  labs(title = "Cumulative level of dead cells (H1N1)" ,y = TeX("$\\log10(cells \\cdot day)$"))  
+
+compare_means(AUCD ~ strain, group.by = "role", data = AUCD.all)
+p.AUCD +   stat_compare_means(aes(label = ..p.signif..), label.y = 4, symnum.args = symnum.args, size = 10) + 
+  scale_linetype(guide = 'none')   + 
+  scale_size_manual( guide = "none", values = c(1,1) )
+
+
+ 
