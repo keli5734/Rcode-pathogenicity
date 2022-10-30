@@ -1,0 +1,106 @@
+
+library(tidyverse)
+library(readxl)
+library(wesanderson)
+library(plyr)
+library(latex2exp)
+
+
+V.HP.H1N1 <- read_excel("~/Desktop/W3-revision-figures/Rplotdata//V_traj_HP_H1N1.xls", 
+                        col_names = as.character( seq(1,10,by = 1)))
+
+
+V.LP.H1N1 <- read_excel("~/Desktop/W3-revision-figures/Rplotdata//V_traj_LP_H1N1.xls", 
+                        col_names = as.character( seq(1,10,by = 1)))
+
+
+M.HP.H1N1 <- read_excel("~/Desktop/W3-revision-figures/Rplotdata//M_traj_HP_H1N1.xls", 
+                        col_names = as.character( seq(1,10,by = 1)))
+
+
+M.LP.H1N1 <- read_excel("~/Desktop/W3-revision-figures/Rplotdata//M_traj_LP_H1N1.xls", 
+                        col_names = as.character( seq(1,10,by = 1)))
+dimen <- dim(V.HP.H1N1)
+paras <-  factor(rep(c(seq(1,10,by = 1)), each = dimen[1] ))
+time <- seq(from = 0, to = 10, length.out = 241)
+
+V.HP.mat <- as.vector(as.matrix(V.HP.H1N1))
+V.LP.mat <- as.vector(as.matrix(V.LP.H1N1))
+M.HP.mat <- as.vector(as.matrix(M.HP.H1N1))
+M.LP.mat <- as.vector(as.matrix(M.LP.H1N1))
+
+V.HP.df <- data.frame(time = rep(time, dimen[2]),
+                      data = V.HP.mat,
+                      paras = paras)
+
+V.LP.df <- data.frame(time = rep(time, dimen[2]),
+                      data = V.LP.mat,
+                      paras = paras)
+
+M.HP.df <- data.frame(time = rep(time, dimen[2]),
+                      data = M.HP.mat,
+                      paras = paras)
+
+M.LP.df <- data.frame(time = rep(time, dimen[2]),
+                      data = M.LP.mat,
+                      paras = paras)
+
+
+data_plot <- data.frame(time = c(V.time.HP, V.time.LP),
+                        V_data = c(V.data.HP, V.data.LP),
+                        Strain = rep(c("HP", "LP"), each = length(V.data.HP)))
+
+fit_plot <- data.frame(time = c(t_ppc, t_ppc),
+                        value_lower = c(lower_95PI.HP, lower_95PI.LP),
+                        value_upper = c(upper_95PI.HP, upper_95PI.LP),
+                        Strain = rep(c("HP", "LP"), each = length(lower_95PI.HP)))
+ 
+
+V_H1N1 <- ggplot(fit_plot, aes(time))+
+  geom_line(data = V.HP.df, aes(time, log10(data), group = paras), color = "#ae3918", size = 1, alpha = .3) +
+  geom_line(data = V.LP.df, aes(time, log10(data), group = paras), color = "#49997c", size = 1, alpha = .3) +
+  geom_ribbon(aes(ymin = log10(value_lower), ymax = log10(value_upper), fill =  Strain), alpha = 0.3, na.rm = TRUE) + 
+  geom_point(data = data_plot, aes(time, log10(V_data), group = Strain, shape = Strain), size = 5) + 
+  theme_bw() + 
+  labs(x="Days post infection (p.i.)", y= "Virus titer (log10 PFU/ml)") + 
+  theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+  scale_color_manual(values = wes_palette("Darjeeling1", n = 2)) + 
+  scale_fill_manual(values = wes_palette("Darjeeling1", n = 2)) +
+  ylim(-2,10) + 
+  scale_x_continuous(breaks=seq(0,10,2)) + 
+  theme(panel.border = element_blank(), axis.line = element_line(colour = "black")) + 
+  theme(text = element_text(size = 25)) 
+
+V_H1N1
+
+
+
+
+
+data_plot.M <- data.frame(time = c(M.time.HP, M.time.LP),
+                        M_data = c(M.data.HP, M.data.LP),
+                        Strain = rep(c("HP", "LP"), each = length(M.data.HP)))
+
+fit_plot.M <- data.frame(time = c(t_ppc, t_ppc),
+                       value_lower = c(M.lower_95PI.HP, M.lower_95PI.LP),
+                       value_upper = c(M.upper_95PI.HP, M.upper_95PI.LP),
+                       Strain = rep(c("HP", "LP"), each = length(M.lower_95PI.HP)))
+
+
+
+M_H1N1 <- ggplot(fit_plot.M, aes(time)) + 
+  geom_line(data = M.HP.df, aes(time, log10(data), group = paras), color = "#ae3918", size = 1, alpha = .3) +
+  geom_line(data = M.LP.df, aes(time, log10(data), group = paras), color = "#49997c", size = 1, alpha = .3) +
+  geom_ribbon(aes(ymin = log10(value_lower), ymax = log10(value_upper), fill =  Strain), alpha = 0.3, na.rm = TRUE) + 
+  geom_point(data = data_plot.M, aes(time, log10(M_data), group = Strain, shape = Strain), size = 5) + 
+  theme_bw() + 
+  ylab("Macrophages (log10 cells)") + xlab("Days post infection (p.i.)") + 
+  theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+  scale_color_manual(values = wes_palette("Darjeeling1", n = 4)) + 
+  scale_fill_manual(values = wes_palette("Darjeeling1", n = 4)) + 
+  ylim(2,8) + 
+  scale_x_continuous(breaks=seq(0,10,2)) + 
+  theme(panel.border = element_blank(), axis.line = element_line(colour = "black")) + 
+  theme(text = element_text(size = 25))  
+
+M_H1N1
