@@ -1,0 +1,385 @@
+rm(list=ls())  # clear memory
+
+
+
+library(tidyverse)
+library(bayesplot)
+library(deSolve)
+library(readxl)
+library(wesanderson)
+library(plyr)
+library(latex2exp)
+
+
+
+V.dataset.HP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/ViralLoadData.xls", sheet = "Thai16")
+V.data.HP <- V.dataset.HP$Y
+V.time.HP <- V.dataset.HP$Day
+
+M.dataset.HP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/MacrophageData.xls", sheet = "Thai16")
+M.data.HP <- M.dataset.HP$Y
+M.data.HP <- M.data.HP * 1e+5
+M.time.HP <- M.dataset.HP$Day
+
+
+
+V.dataset.LP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/ViralLoadData.xls", sheet = "SP83")
+V.data.LP <- V.dataset.LP$Y
+V.time.LP <- V.dataset.LP$Day
+
+M.dataset.LP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/MacrophageData.xls", sheet = "SP83")
+M.data.LP <- M.dataset.LP$Y
+M.data.LP <- M.data.LP * 1e+5
+M.time.LP <- M.dataset.LP$Day
+
+
+fit_H5N1 <- readRDS("~/Desktop/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/H5N1/fit_Model_H5N1_latent.rds")
+
+posterior_samples_all.HP = rstan::extract(fit_H5N1, pars = c("log10_theta_HP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.HP = rstan::extract(fit_H5N1, pars = c("log10_theta_HP"))
+
+posterior_samples_all.LP = rstan::extract(fit_H5N1, pars = c("log10_theta_LP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.LP = rstan::extract(fit_H5N1, pars = c("log10_theta_LP"))
+
+# show markov chains
+library(bayesplot)
+color_scheme_set("brewer-Spectral")
+mcmc_trace(posterior_samples_all.HP, n_warmup = 2000,
+           facet_args = list(nrow = 2))
+mcmc_trace(posterior_samples_all.LP, n_warmup = 2000,
+           facet_args = list(nrow = 2))
+
+
+
+
+
+
+
+V.dataset.HP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/ViralLoadData.xls", sheet = "1918")
+V.data.HP <- V.dataset.HP$Y
+V.time.HP <- V.dataset.HP$Day
+
+M.dataset.HP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/MacrophageData.xls", sheet = "1918")
+M.data.HP <- M.dataset.HP$Y
+M.data.HP <- M.data.HP * 1e+5
+M.time.HP <- M.dataset.HP$Day
+
+
+
+V.dataset.LP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/ViralLoadData.xls", sheet = "TX91")
+V.data.LP <- V.dataset.LP$Y
+V.time.LP <- V.dataset.LP$Day
+
+M.dataset.LP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/MacrophageData.xls", sheet = "TX91")
+M.data.LP <- M.dataset.LP$Y
+M.data.LP <- M.data.LP * 1e+5
+M.time.LP <- M.dataset.LP$Day
+
+
+fit_H1N1 <- readRDS("~/Desktop/OneDrive - The University of Melbourne/work3/R code/fit_Model_H1N1_2710.rds")
+
+posterior_samples_all.HP = rstan::extract(fit_H1N1, pars = c("log10_theta_HP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.HP = rstan::extract(fit_H1N1, pars = c("log10_theta_HP"))
+
+posterior_samples_all.LP = rstan::extract(fit_H1N1, pars = c("log10_theta_LP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.LP = rstan::extract(fit_H1N1, pars = c("log10_theta_LP"))
+
+
+
+# show all marginal posterior distributions
+posterior_sample_table.HP <-   data.frame(sV = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,1],
+                                          beta = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,2],
+                                          q_FI = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,3],
+                                          q_FM = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,4],
+                                          kappa_A = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,5],
+                                          sM = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,6],
+                                          q_prime = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,7],
+                                          V0 = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,8])
+                                          
+
+
+
+posterior_sample_table.LP <-   data.frame(sV = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,1],
+                                          beta = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,2],
+                                          q_FI = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,3],
+                                          q_FM = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,4],
+                                          kappa_A = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,5],
+                                          q_prime = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,6])
+
+
+
+
+# H1N1
+write.csv(posterior_samplesMerged_after_burnin.HP, file="Desktop/W3-revision-figures/H1N1.HP.para.csv")
+write.csv(posterior_samplesMerged_after_burnin.LP, file="Desktop/W3-revision-figures/H1N1.LP.para.csv")
+
+#H5N1
+write.csv(posterior_samplesMerged_after_burnin.HP, file="Desktop/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/H5N1/H5N1.HP.para.csv")
+write.csv(posterior_samplesMerged_after_burnin.LP, file="Desktop/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/H5N1/H5N1.LP.para.csv")
+
+# posterior predictive check
+Within_host_model = function(t, y, theta){
+  
+  dydt1 = theta[6] - 1.1e-2 * y[1] - 0.4 * (y[6]/(y[6] + 1.2e+7)) * (1/(1 + 1e-4 * y[3])) * y[1] + 0.3 * y[2] - 4e-6 * (y[9]/ (y[9]+1e+6)) * y[1] + 0.3 * y[3];
+  dydt2 = theta[1] * y[5] + 0.4 * (y[6]/(y[6] + 1.2e+7)) * (1 / (1 + 1e-4 * y[3])) * y[1] - 0.3 * y[2] - 1.1e-2 * y[2];
+  dydt3 = 4e-6 * (y[9]/ (y[9]+1e+6)) * y[1] - 0.3 * y[3] - 1.1e-2 * y[3];
+  
+  
+  dydt4 =  0.8 * (y[4]+y[8]) * (1 - (y[4] + y[5] + y[8] + y[10])/ 7e+7) - theta[2] * y[4] * y[6] - 0.33 * y[7] * y[4] + 2.6 * y[8]; # T
+  dydt5 =  4 * y[10] - 2 * y[5] - 3 * y[7] * y[5] - 8 * ( t^4 / (t^4 + 10^4) ) * y[5]; # I 
+  dydt6 =  210 * y[5] - 5 * y[6] - theta[5] * ( t^4 / (t^4 + 10^4 ) ) * y[6] - theta[7] * y[1] *y[6]; # V
+  
+  
+  dydt7 = theta[3] * y[5] + theta[4] * y[2] - 2 * y[7]; # F
+  dydt8 = 0.33 * y[7] * y[4] - 2.6 * y[8]; # R
+  dydt9 = 3 * y[5] +  3 * y[7] * y[5] + 8 * ( t^4 / (t^4 + 10^4) ) * y[5] - 8e-7 * y[9] * y[2] - 2 * y[9]; # D
+  dydt10 = theta[2] * y[4] * y[6] - 4 * y[10] # latent state infected cells I2, l = 4 per day which equivalent to 6 hrs
+  
+  
+  
+  list(c(dydt1, dydt2, dydt3, dydt4, dydt5, dydt6, dydt7, dydt8, dydt9, dydt10))
+}
+
+Within_host_model2 = function(t, y, theta){
+  
+  dydt1 = theta[6] - 1.1e-2 * y[1] - 0.4 * (y[6]/(y[6] + 1.2e+7)) * (1/(1 + 1e-4 * y[3])) * y[1] + 0.3 * y[2] - 4e-6 * (y[9]/ (y[9]+1e+6)) * y[1] + 0.3 * y[3];
+  dydt2 = theta[1] * y[5] + 0.4 * (y[6]/(y[6] + 1.2e+7)) * (1 / (1 + 1e-4 * y[3])) * y[1] - 0.3 * y[2] - 1.1e-2 * y[2];
+  dydt3 = 4e-6 * (y[9]/ (y[9]+1e+6)) * y[1] - 0.3 * y[3] - 1.1e-2 * y[3];
+  
+  
+  dydt4 =  0.8 * (y[4]+y[8]) * (1 - (y[4] + y[5] + y[8])/ 7e+7) - theta[2] * y[4] * y[6] - 0.33 * y[7] * y[4] + 2.6 * y[8]; 
+  dydt5 =  theta[2] * y[4] * y[6] - 3 * y[5] - 3 * y[7] * y[5] - 8 * ( t^4 / (t^4 + 10^4) ) * y[5]; 
+  dydt6 =  100 * y[5] - 20 * y[6] - theta[5] * ( t^4 / (t^4 + 10^4 ) ) * y[6] - theta[8] * y[1] *y[6];
+  
+  
+  dydt7 = theta[3] * y[5] + theta[4] * y[2] - 2 * y[7]
+  dydt8 = 0.33 * y[7] * y[4] - 2.6 * y[8]
+  dydt9 = 3 * y[5] +  3 * y[7] * y[5] + 8 * ( t^4 / (t^4 + 10^4) ) * y[5] - 8e-7 * y[9] * y[2] - 2 * y[9]; 
+  
+  list(c(dydt1, dydt2, dydt3, dydt4, dydt5, dydt6, dydt7, dydt8, dydt9))
+}
+
+
+
+t_ppc = seq(0, 10, 0.1)
+
+V_ppc.HP = matrix(, nrow = length(posterior_sample_table.HP$sV), ncol = length(t_ppc))
+lower_95PI.HP = t_ppc
+median_95PI.HP = t_ppc
+upper_95PI.HP = t_ppc
+
+
+M_ppc.HP = matrix(, nrow =  length(posterior_sample_table.HP$sV), ncol = length(t_ppc))
+M.lower_95PI.HP = t_ppc
+M.median_95PI.HP = t_ppc
+M.upper_95PI.HP = t_ppc
+
+
+V_ppc.LP = matrix(, nrow =  length(posterior_sample_table.LP$sV), ncol = length(t_ppc))
+lower_95PI.LP = t_ppc
+median_95PI.LP = t_ppc
+upper_95PI.LP = t_ppc
+
+
+M_ppc.LP = matrix(, nrow = length(posterior_sample_table.LP$sV), ncol = length(t_ppc))
+M.lower_95PI.LP = t_ppc
+M.median_95PI.LP = t_ppc
+M.upper_95PI.LP = t_ppc
+
+
+
+
+for (i in 1:length(posterior_sample_table.HP$sV)){
+  
+  y_init.HP   =  c(10^posterior_sample_table.HP$sM[i] / 1.1e-2,
+                   0,
+                   0,
+                   7e+7, 
+                   0, 
+                   10^posterior_sample_table.HP$V0[i], 
+                   0,
+                   0,
+                   0,
+                   0)
+  
+  
+  
+  param_fit.HP  =   c(10^posterior_sample_table.HP$sV[i], 
+                      10^posterior_sample_table.HP$beta[i], 
+                      10^posterior_sample_table.HP$q_FI[i], 
+                      10^posterior_sample_table.HP$q_FM[i],
+                      10^posterior_sample_table.HP$kappa_A[i],
+                      10^posterior_sample_table.HP$sM[i],
+                      10^posterior_sample_table.HP$q_prime[i],
+                      10^posterior_sample_table.HP$V0[i])
+  
+  
+  model_output.HP = ode(times = t_ppc, y = y_init.HP, func = Within_host_model, parms = param_fit.HP, method = "bdf")
+  V_ppc.HP[i,] = model_output.HP[,7]
+  M_ppc.HP[i,] = model_output.HP[,2] + model_output.HP[,3] + model_output.HP[,4]
+  
+}
+
+
+
+for (i in 1:length(posterior_sample_table.LP$sV)){
+  
+  y_init.LP   =  c(10^posterior_sample_table.HP$sM[i] / 1.1e-2,
+                   0,
+                   0,
+                   7e+7, 
+                   0, 
+                   10^posterior_sample_table.HP$V0[i], 
+                   0,
+                   0,
+                   0,
+                   0)
+                   
+  
+  
+  
+  param_fit.LP  =   c(10^posterior_sample_table.LP$sV[i], 
+                      10^posterior_sample_table.LP$beta[i], 
+                      10^posterior_sample_table.LP$q_FI[i], 
+                      10^posterior_sample_table.LP$q_FM[i],
+                      10^posterior_sample_table.LP$kappa_A[i],
+                      10^posterior_sample_table.HP$sM[i],
+                      10^posterior_sample_table.LP$q_prime[i],
+                      10^posterior_sample_table.HP$V0[i])
+  
+  
+  model_output.LP = ode(times = t_ppc, y = y_init.LP, func = Within_host_model, parms = param_fit.LP, method = "bdf")
+  V_ppc.LP[i,] = model_output.LP[,7]
+  M_ppc.LP[i,] = model_output.LP[,2] + model_output.LP[,3] + model_output.LP[,4]
+  
+}
+
+
+
+
+
+
+for (i in 1:length(t_ppc)){
+  
+  temp.HP = unname(quantile(V_ppc.HP[,i], probs = c(0.025, 0.5, 0.975)))
+  lower_95PI.HP[i] = temp.HP[1]
+  median_95PI.HP[i] = temp.HP[2]
+  upper_95PI.HP[i] = temp.HP[3]
+  
+  M.temp.HP = unname(quantile(M_ppc.HP[,i], probs = c(0.025, 0.5, 0.975)))
+  M.lower_95PI.HP[i] = M.temp.HP[1]
+  M.median_95PI.HP[i] = M.temp.HP[2]
+  M.upper_95PI.HP[i] = M.temp.HP[3]
+  
+  
+  temp.LP = unname(quantile(V_ppc.LP[,i], probs = c(0.025, 0.5, 0.975)))
+  lower_95PI.LP[i] = temp.LP[1]
+  median_95PI.LP[i] = temp.LP[2]
+  upper_95PI.LP[i] = temp.LP[3]
+  
+  M.temp.LP = unname(quantile(M_ppc.LP[,i], probs = c(0.025, 0.5, 0.975)))
+  M.lower_95PI.LP[i] = M.temp.LP[1]
+  M.median_95PI.LP[i] = M.temp.LP[2]
+  M.upper_95PI.LP[i] = M.temp.LP[3]
+}
+
+
+
+data_plot.HP <-  data.frame(time = V.time.HP,
+                            V = V.data.HP)
+
+
+
+fit_plot.HP <- data.frame(time = t_ppc, 
+                          lower_95PI = c(lower_95PI.HP), 
+                          upper_95PI = c(upper_95PI.HP))
+
+
+ggplot(fit_plot.HP, aes(time))+
+  geom_point(data = data_plot.HP, aes(time, log10(V)), size = 3) +
+  geom_ribbon(aes(ymin = log10(lower_95PI), ymax = log10(upper_95PI)), alpha = 0.2, na.rm = TRUE, fill = "red") +
+  theme_bw() + 
+  theme(text = element_text(size = 25))  + 
+  ylab("Virus titer (log10 PFU/ml)") + xlab("Days post infection (p.i.)") + 
+  theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+  scale_color_manual(values = wes_palette("Darjeeling1", n = 1)) + 
+  scale_fill_manual(values = wes_palette("Darjeeling1", n = 1)) +
+  ylim(-2,9) + 
+  scale_x_continuous(breaks=seq(0,10,2))
+
+
+
+
+
+
+data_plot.LP <-  data.frame(time = V.time.LP,
+                            V = V.data.LP)
+
+
+
+fit_plot.LP <- data.frame(time = t_ppc, 
+                          lower_95PI = c(lower_95PI.LP), 
+                          upper_95PI = c(upper_95PI.LP))
+
+
+ggplot(fit_plot.LP, aes(time))+
+  geom_point(data = data_plot.LP, aes(time, log10(V)), size = 3) +
+  geom_ribbon(aes(ymin = log10(lower_95PI), ymax = log10(upper_95PI)), alpha = 0.2, na.rm = TRUE, fill = "red") +
+  theme_bw() + 
+  theme(text = element_text(size = 25))  + 
+  ylab("Virus titer (log10 PFU/ml)") + xlab("Days post infection (p.i.)") + 
+  theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+  scale_color_manual(values = wes_palette("Darjeeling1", n = 4)) + 
+  scale_fill_manual(values = wes_palette("Darjeeling1", n = 4)) + 
+  ylim(-2,9) + 
+  scale_x_continuous(breaks=seq(0,10,2)) 
+ 
+
+
+
+
+M.data_plot.HP <-  data.frame(time = M.time.HP,
+                              M = M.data.HP)
+
+
+fit_plot.M.HP <- data.frame(time = t_ppc, 
+                            lower_95PI = c(M.lower_95PI.HP), 
+                            upper_95PI = c(M.upper_95PI.HP))
+
+
+ggplot(fit_plot.M.HP, aes(time))+
+  geom_point(data = M.data_plot.HP, aes(time, log10(M)), size = 3) +
+  geom_ribbon(aes(ymin = log10(lower_95PI), ymax = log10(upper_95PI)), alpha = 0.2, na.rm = TRUE, fill = "blue4") +
+  theme_bw() + 
+  theme(text = element_text(size = 25))  + 
+  ylab("Macrophages (log10 cells)") + xlab("Days post infection (p.i.)") + 
+  theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+  scale_color_manual(values = wes_palette("Darjeeling1", n = 4)) + 
+  scale_fill_manual(values = wes_palette("Darjeeling1", n = 4)) + 
+  ylim(2,8) + 
+  scale_x_continuous(breaks=seq(0,10,2))
+
+
+
+
+M.data_plot.LP <-  data.frame(time = M.time.LP,
+                              M = M.data.LP)
+
+
+fit_plot.M.LP <- data.frame(time = t_ppc, 
+                            lower_95PI = c(M.lower_95PI.LP), 
+                            upper_95PI = c(M.upper_95PI.LP))
+
+
+ggplot(fit_plot.M.LP, aes(time))+
+  geom_point(data = M.data_plot.LP, aes(time, log10(M)), size = 3) +
+  geom_ribbon(aes(ymin = log10(lower_95PI), ymax = log10(upper_95PI)), alpha = 0.2, na.rm = TRUE, fill = "blue4") +
+  theme_bw() + 
+  theme(text = element_text(size = 25))  + 
+  ylab("Macrophages (log10 cells)") + xlab("Days post infection (p.i.)") + 
+  theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+  scale_color_manual(values = wes_palette("Darjeeling1", n = 4)) + 
+  scale_fill_manual(values = wes_palette("Darjeeling1", n = 4)) + 
+  ylim(2,8) + 
+  scale_x_continuous(breaks=seq(0,10,2))
+
