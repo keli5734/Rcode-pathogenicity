@@ -1,0 +1,145 @@
+rm(list=ls())  # clear memory
+
+
+library(rstan)
+library(tidyverse)
+library(bayesplot)
+library(deSolve)
+library(readxl)
+
+# H1N1
+
+V.dataset.HP <- read_excel("ViralLoadData.xls", sheet = "1918")
+V.data.HP <- V.dataset.HP$Y
+V.time.HP <- V.dataset.HP$Day
+
+M.dataset.HP <- read_excel("MacrophageData.xls", sheet = "1918")
+M.data.HP <- M.dataset.HP$Y
+M.data.HP <- M.data.HP * 1e+5
+M.time.HP <- M.dataset.HP$Day
+
+
+
+V.dataset.LP <- read_excel("ViralLoadData.xls", sheet = "TX91")
+V.data.LP <- V.dataset.LP$Y
+V.time.LP <- V.dataset.LP$Day
+
+M.dataset.LP <- read_excel("MacrophageData.xls", sheet = "TX91")
+M.data.LP <- M.dataset.LP$Y
+M.data.LP <- M.data.LP * 1e+5
+M.time.LP <- M.dataset.LP$Day
+
+
+
+data.combined <-  list(V_time_len_HP = length(V.time.HP),
+                       V_data_len_HP = length(V.data.HP),
+                       V_time_data_HP = round(V.time.HP),
+                       log_V_data_HP = log(V.data.HP), # above viral load data.HP
+                       V_time_len_LP = length(V.time.LP),
+                       V_data_len_LP = length(V.data.LP),
+                       V_time_data_LP = round(V.time.LP),
+                       log_V_data_LP = log(V.data.LP), # above viral load data.LP
+                       M_time_len_HP = length(M.time.HP),
+                       M_data_len_HP = length(M.data.HP),
+                       M_time_data_HP = round(M.time.HP),
+                       log_M_data_HP = log(M.data.HP), # above macrophage data.HP
+                       M_time_len_LP = length(M.time.LP),
+                       M_data_len_LP = length(M.data.LP),
+                       M_time_data_LP = round(M.time.LP),
+                       log_M_data_LP = log(M.data.LP), # above macrophage data.LP
+                       t0 = 0,
+                       M10 = 0,
+                       M20 = 0,
+                       T0 = 7e+7,
+                       I0 = 0,
+                       F0 = 0,
+                       R0 = 0,
+                       D0 = 0,
+                       I20 = 0)
+
+
+
+
+
+init_condition1 <- list(
+  log10_theta_HP = c(log10(3), # sV
+                     log10(3e-8), # beta
+                     log10(2e-6), # p_FI
+                     log10(4e-7), # p_FM
+                     log10(150),  # kappa_AS
+                     log10(330),  # sM
+                     log10(1e-6), # q_prime
+                     log10(80)),  # V0
+  
+  log10_theta_LP =  c(log10(10), # sV
+                      log10(3e-8), # beta
+                      log10(2e-5), # p_FI
+                      log10(4e-7), # p_FM
+                      log10(150),  # kappa_AS
+                      log10(5e-5)),  # q_prime
+  sigma = c(1, 1))
+
+
+
+
+
+init_condition2 <- list(
+  log10_theta_HP = c(log10(1), # sV
+                     log10(9e-8), # beta
+                     log10(8e-6), # p_FI
+                     log10(9e-7), # p_FM
+                     log10(200),  # kappa_AS
+                     log10(100),  # sM
+                     log10(1e-5), # qprime
+                     log10(30)), # V0
+  
+  log10_theta_LP =  c(log10(7), # sV
+                      log10(4e-8), # beta
+                      log10(1e-5), # p_FI
+                      log10(10e-7), # p_FM
+                      log10(150),  # kappa_AS
+                      log10(8e-6)), # q_prime
+  sigma = c(1, 1))
+
+
+
+
+
+
+
+init_condition3 <- list(
+  log10_theta_HP = c(log10(10), # sV
+                     log10(3e-7), # beta
+                     log10(8e-6), # p_FI
+                     log10(10e-7), # p_FM
+                     log10(100),  # kappa_AS
+                     log10(400),  # sM
+                     log10(1e-5),  # q_prime
+                     log10(100)), # V0
+  
+  log10_theta_LP =  c(log10(20), # sV
+                      log10(3e-8), # beta
+                      log10(1e-5), # p_FI
+                      log10(7e-7), # p_FM
+                      log10(180),  # kappa_AS
+                      log10(2e-5)), # q_prime
+  sigma = c(1, 1))
+
+
+options(mc.cores=parallel::detectCores()) # to utilise all cores available in your computer
+
+fit_Model_H1N1 <- stan("Model_2610.stan",
+                       data = data.combined,
+                       pars = c("log10_theta_HP","log10_theta_LP","sigma"),
+                       seed = 25112021,  # set random seed for reproducibility
+                       iter = 4000,
+                       chains = 3,
+                       init = list(init_condition1, init_condition2,init_condition3),
+                       warmup = 1000,
+                       control = list(adapt_delta = 0.99, max_treedepth = 15))
+
+saveRDS(fit_Model_H1N1, file = "fit_Model_H1N1_2710.rds")
+
+
+print(fit_Model_H1N1, pars = c("log10_theta_HP", "log10_theta_LP", "sigma"))
+
