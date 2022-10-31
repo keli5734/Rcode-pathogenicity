@@ -1,0 +1,459 @@
+rm(list=ls())  # clear memory
+
+library(tidyverse)
+library(readxl)
+library(wesanderson)
+library(plyr)
+library(latex2exp)
+
+
+
+
+# H1N1 HP macrophages 
+
+MR.HP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/MR_prop_HP_H1N1.xls", col_names = as.character( seq(0.025,0.975,by = 0.025)))
+# MR.HP.low <- MR.HP$low
+# MR.HP.upp <- MR.HP$upp 
+# MR.HP.median <- MR.HP$median
+
+M1.HP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/M1_prop_HP_H1N1.xls",col_names = as.character( seq(0.025,0.975,by = 0.025)))
+# M1.HP.low <- M1.HP$low
+# M1.HP.upp <- M1.HP$upp 
+# M1.HP.median <- M1.HP$median
+
+
+
+M2.HP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/M2_prop_HP_H1N1.xls",col_names = as.character( seq(0.025,0.975,by = 0.025)))
+# M2.HP.low <- M2.HP$low
+# M2.HP.upp <- M2.HP$upp 
+# M2.HP.median <- M2.HP$median
+
+
+MR.LP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/MR_prop_LP_H1N1.xls",col_names = as.character( seq(0.025,0.975,by = 0.025)))
+# MR.LP.low <- MR.LP$low
+# MR.LP.upp <- MR.LP$upp 
+# MR.LP.median <- MR.LP$median
+
+M1.LP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/M1_prop_LP_H1N1.xls",col_names =as.character( seq(0.025,0.975,by = 0.025)))
+# M1.LP.low <- M1.LP$low
+# M1.LP.upp <- M1.LP$upp 
+# M1.LP.median <- M1.LP$median
+
+
+M2.LP <- read_excel("~/Desktop/OneDrive - The University of Melbourne/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/M2_prop_LP_H1N1.xls",col_names =as.character( seq(0.025,0.975,by = 0.025)))
+# M2.LP.low <- M2.LP$low
+# M2.LP.upp <- M2.LP$upp 
+# M2.LP.median <- M2.LP$median
+
+
+# fit_plot.M.HP <- data.frame(time = t_ppc, 
+#                             MR.HP.low = c(MR.HP.low), 
+#                             MR.HP.upp = c(MR.HP.upp),
+#                             M1.HP.low = c(M1.HP.low), 
+#                             M1.HP.upp = c(M1.HP.upp),
+#                             M2.HP.low = c(M2.HP.low), 
+#                             M2.HP.upp = c(M2.HP.upp))
+# 
+# 
+# 
+# ggplot(fit_plot.M.HP, aes(time))+
+#   geom_ribbon(aes(ymin = MR.HP.low, ymax = MR.HP.upp, fill = "blue"), alpha = 0.3, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = M1.HP.low, ymax = M1.HP.upp, fill = "green"), alpha = 0.3, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = M2.HP.low, ymax = M2.HP.upp, fill = "red"), alpha = 0.3, na.rm = TRUE) +
+#   theme_minimal() + 
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+#   theme(text = element_text(size = 25))  + 
+#   ylab("proportion") + xlab("Days post infection (p.i.)") + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"),legend.position = "top") + 
+#   scale_fill_manual( "",
+#                      labels = c("MR", "M1","M2"), 
+#                      values=c("blue"="blue","green"="green", "red" = "red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# fit_plot.M.LP <- data.frame(time = t_ppc, 
+#                             MR.LP.low = c(MR.LP.low), 
+#                             MR.LP.upp = c(MR.LP.upp),
+#                             M1.LP.low = c(M1.LP.low), 
+#                             M1.LP.upp = c(M1.LP.upp),
+#                             M2.LP.low = c(M2.LP.low), 
+#                             M2.LP.upp = c(M2.LP.upp))
+# 
+# ggplot(fit_plot.M.LP, aes(time))+
+#   geom_ribbon(aes(ymin = MR.LP.low, ymax = MR.LP.upp, fill = "blue"), alpha = 0.3, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = M1.LP.low, ymax = M1.LP.upp, fill = "green"), alpha = 0.3, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = M2.LP.low, ymax = M2.LP.upp, fill = "red"), alpha = 0.3, na.rm = TRUE) +
+#   theme_minimal() + 
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+#   theme(text = element_text(size = 25))  + 
+#   ylab("proportion") + xlab("Days post infection (p.i.)") + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"),legend.position = "top") + 
+#   scale_fill_manual( "",
+#                      labels = c("MR", "M1","M2"), 
+#                      values=c("blue"="blue","green"="green", "red" = "red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1)
+# 
+
+
+
+
+
+
+
+
+# 
+# 
+# fit_plot.M1.HP <- data.frame(time = t_ppc, 
+#                             M1.HP.low = c(M1.HP.low), 
+#                             M1.HP.upp = c(M1.HP.upp),
+#                             M1.median = c(M1.HP.median))
+#                             
+# 
+# 
+# 
+# ggplot(fit_plot.M1.HP, aes(time))+
+#   geom_ribbon(aes(ymin = M1.HP.low, ymax = M1.HP.upp, fill = "blue"), alpha = 0.4, na.rm = TRUE) +
+#   geom_line(data = fit_plot.M1.HP, aes(time, M1.median, color = "red"), size = 0.6, alpha = 0.6) +
+#   theme_minimal() + 
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+#   theme(text = element_text(size = 25))  + 
+#   ylab("proportion") + xlab("Days post infection (p.i.)") + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"),legend.position = "top") + 
+#   scale_fill_manual( "PI",
+#                      labels = c("95%"), 
+#                      values=c("blue"="deepskyblue1")) +
+#   scale_color_manual( "",
+#                      labels = c("median"), 
+#                      values=c("red"="red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1)
+# 
+# 
+# 
+# 
+# 
+# fit_plot.M2.HP <- data.frame(time = t_ppc, 
+#                              M2.HP.low = c(M2.HP.low), 
+#                              M2.HP.upp = c(M2.HP.upp),
+#                              M2.median = c(M2.HP.median))
+# 
+# 
+# 
+# 
+# ggplot(fit_plot.M2.HP, aes(time))+
+#   geom_ribbon(aes(ymin = M2.HP.low, ymax = M2.HP.upp, fill = "blue"), alpha = 0.4, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = M2.HP.low90, ymax = M2.HP.upp90, fill = "blue2"), alpha = 0.6, na.rm = TRUE) +
+#   geom_line(data = fit_plot.M2.HP, aes(time, M2.median, color = "red"), size = 1, alpha = 0.6) +
+#   theme_minimal() + 
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+#   theme(text = element_text(size = 25))  + 
+#   ylab("proportion") + xlab("Days post infection (p.i.)") + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"),legend.position = "top") + 
+#   scale_fill_manual( "PI",
+#                      labels = c("95%", "90%"), 
+#                      values=c("blue"="deepskyblue1","blue2"="skyblue4"))  + 
+#   scale_color_manual( "",
+#                       labels = c("median"), 
+#                       values=c("red"="red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1)
+# 
+# 
+# 
+# 
+# 
+# fit_plot.MR.HP <- data.frame(time = t_ppc, 
+#                              MR.HP.low = c(MR.HP.low), 
+#                              MR.HP.upp = c(MR.HP.upp),
+#                              MR.median = c(MR.HP.median))
+# 
+# 
+# 
+# 
+# ggplot(fit_plot.MR.HP, aes(time))+
+#   geom_ribbon(aes(ymin = MR.HP.low, ymax = MR.HP.upp, fill = "blue"), alpha = 0.4, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = MR.HP.low90, ymax = MR.HP.upp90, fill = "blue2"), alpha = 0.6, na.rm = TRUE) +
+#   geom_line(data = fit_plot.MR.HP, aes(time, MR.median, color = "red"), size = 1, alpha = 0.6) +
+#   theme_minimal() + 
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+#   theme(text = element_text(size = 25))  + 
+#   ylab("proportion") + xlab("Days post infection (p.i.)") + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+#   scale_fill_manual( "PI",
+#                      labels = c("95%", "90%"), 
+#                      values=c("blue"="deepskyblue1","blue2"="skyblue4")) + 
+#   scale_color_manual( "",
+#                       labels = c("median"), 
+#                       values=c("red"="red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# fit_plot.M1.LP <- data.frame(time = t_ppc, 
+#                              M1.LP.low = c(M1.LP.low), 
+#                              M1.LP.upp = c(M1.LP.upp),
+#                              M1.median = c(M1.LP.median))
+# 
+# 
+# 
+# 
+# ggplot(fit_plot.M1.LP, aes(time))+
+#   geom_ribbon(aes(ymin = M1.LP.low, ymax = M1.LP.upp, fill = "blue"), alpha = 0.4, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = M1.LP.low90, ymax = M1.LP.upp90, fill = "blue2"), alpha = 0.6, na.rm = TRUE) +
+#   geom_line(data = fit_plot.M1.LP, aes(time, M1.median, color = "red"), size = 1, alpha = 0.6) +
+#   theme_minimal() + 
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+#   theme(text = element_text(size = 25))  + 
+#   ylab("proportion") + xlab("Days post infection (p.i.)") + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"),legend.position = "top") + 
+#   scale_fill_manual( "PI",
+#                      labels = c("95%", "90%"), 
+#                      values=c("blue"="deepskyblue1","blue2"="skyblue4"))  + 
+#   scale_color_manual( "",
+#                       labels = c("median"), 
+#                       values=c("red"="red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1)
+# 
+# 
+# 
+# 
+# 
+# fit_plot.M2.LP <- data.frame(time = t_ppc,
+#                              M2.LP.low = c(M2.LP.low), 
+#                              M2.LP.upp = c(M2.LP.upp),
+#                              M2.median = c(M2.LP.median))
+# 
+# 
+# 
+# 
+# ggplot(fit_plot.M2.LP, aes(time))+
+#   geom_ribbon(aes(ymin = M2.LP.low, ymax = M2.LP.upp, fill = "blue"), alpha = 0.4, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = M2.LP.low90, ymax = M2.LP.upp90, fill = "blue2"), alpha = 0.6, na.rm = TRUE) +
+#   geom_line(data = fit_plot.M2.LP, aes(time, M2.median, color = "red"), size = 1, alpha = 0.6) +
+#   theme_minimal() + 
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+#   theme(text = element_text(size = 25))  + 
+#   ylab("proportion") + xlab("Days post infection (p.i.)") + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"),legend.position = "top") + 
+#   scale_fill_manual( "PI",
+#                      labels = c("95%", "90%"), 
+#                      values=c("blue"="deepskyblue1","blue2"="skyblue4"))  + 
+#   scale_color_manual( "",
+#                       labels = c("median"), 
+#                       values=c("red"="red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1)
+# 
+# 
+# 
+# 
+# 
+# fit_plot.MR.LP <- data.frame(time = t_ppc, 
+#                              MR.HP.low = c(MR.LP.low), 
+#                              MR.HP.upp = c(MR.LP.upp),
+#                              MR.median = c(MR.LP.median))
+# 
+# 
+# 
+# 
+# ggplot(fit_plot.MR.LP, aes(time))+
+#   geom_ribbon(aes(ymin = MR.LP.low, ymax = MR.LP.upp, fill = "blue"), alpha = 0.4, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = MR.LP.low90, ymax = MR.LP.upp90, fill = "blue2"), alpha = 0.6, na.rm = TRUE) +
+#   geom_line(data = fit_plot.MR.LP, aes(time, MR.median, color = "red"), size = 1, alpha = 0.8) +
+#   theme_minimal() + 
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#         panel.background = element_blank(), axis.line = element_line(colour = "black")) + 
+#   theme(text = element_text(size = 25))  + 
+#   ylab("proportion") + xlab("Days post infection (p.i.)") + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+#   scale_fill_manual( "PI",
+#                      labels = c("95%", "90%"), 
+#                      values=c("blue"="deepskyblue1","blue2"="skyblue4")) + 
+#   scale_color_manual( "",
+#                       labels = c("median"), 
+#                       values=c("red"="red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1)
+# 
+# 
+# 
+# 
+# 
+# 
+# len_time <- length(MR.HP.low)
+# low.quantile.data <- c(MR.HP.low, M1.HP.low, M2.HP.low, MR.LP.low, M1.LP.low, M2.LP.low)
+# median.quantile.data <- c(MR.HP.median, M1.HP.median, M2.HP.median, MR.LP.median, M1.LP.median, M2.LP.median)
+# upp.quantile.data <- c(MR.HP.upp, M1.HP.upp, M2.HP.upp, MR.LP.upp, M1.LP.upp, M2.LP.upp)
+# macrophage.type <- factor(c("MR","M1","M2"), levels = c("MR","M1","M2"))
+# viral.strain <- c("HP", "LP")
+# 
+# macrophage.df <- data.frame(low.quantile = low.quantile.data,
+#                             median.quantile = median.quantile.data,
+#                             upp.quantile = upp.quantile.data,
+#                             M.type = rep(macrophage.type, each = len_time),
+#                             viral.strain = rep(viral.strain, each = len_time * 3),
+#                            time = t_ppc)
+# 
+# 
+# 
+# textcol <- "black" 
+# 
+# ggplot(macrophage.df, aes(time))+
+#   #geom_ribbon(aes(ymin = low.quantile, ymax = upp.quantile, fill = "blue"), alpha = 0.5, na.rm = TRUE) +
+#   geom_line(data = macrophage.df, aes(time, median.quantile, color = "red"), size = 1, alpha = 0.8) +
+#   geom_line(data = macrophage.df, aes(time, upp.quantile, color = "blue"), size = 1, alpha = 0.2) +
+#   theme(text = element_text(size = 20))  + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "right") + 
+#   scale_fill_manual(  "",
+#                      labels = c("95% PI"), 
+#                      values=c("blue"="deepskyblue1")) + 
+#   scale_color_manual( "",
+#                       labels = c("median"), 
+#                       values=c("red"="red")) + 
+#   xlim(0,10) + 
+#   ylim(0,1) + 
+#   facet_grid( viral.strain ~ M.type) + 
+#   labs(x="Days post infection (p.i.)", y="Proportion", title="Detailed macrophage dynamics (H1N1)") + 
+#   theme(legend.position="right", legend.direction="vertical",
+#         legend.title=element_text(colour=textcol,size = 15),
+#         legend.margin=margin(grid::unit(0, "cm")),
+#         legend.text=element_text(colour=textcol, size= 15, face="bold"),
+#         legend.key.height=grid::unit(0.4, "cm"),
+#         legend.key.width=grid::unit(0.5, "cm"),
+#         axis.text.x=element_text(size= 13, colour=textcol, angle = 0, face="bold"),
+#         axis.text.y=element_text(size = 14, vjust=0.2, colour=textcol, face="bold"),
+#         axis.ticks=element_line(size=0.4),
+#         #plot.background=element_blank(),
+#         #panel.border=element_blank(),
+#         panel.border = element_rect(colour = "black", fill=NA, size=2),
+#         plot.margin=margin(0.7, 0.4, 0.1, 0.2, "cm"),
+#         plot.title=element_text(colour=textcol, hjust=0.5, size=15, face="bold"),
+#         strip.text.x = element_text(size = 14, hjust = 0.5, face = "bold"),
+#         strip.text.y = element_text(size = 14, hjust = 0.5, face = "bold"),
+#         axis.line = element_line(colour = "black"),
+#         panel.grid.major  = element_blank()) 
+#   
+# 
+
+
+MR.HP.data <- as.vector(as.matrix(MR.HP))
+M1.HP.data <- as.vector(as.matrix(M1.HP))
+M2.HP.data <- as.vector(as.matrix(M2.HP))
+
+MR.LP.data <- as.vector(as.matrix(MR.LP))
+M1.LP.data <- as.vector(as.matrix(M1.LP))
+M2.LP.data <- as.vector(as.matrix(M2.LP))
+
+
+dm <- dim(MR.HP)
+len_time <- 241
+t_ppc <- seq(from = 0, to = 10, length.out = 241)
+
+all.data <- c(MR.HP.data,
+              M1.HP.data,
+              M2.HP.data,
+              MR.LP.data,
+              M1.LP.data,
+              M2.LP.data)
+
+MR.HP.median.data <- as.vector(as.matrix(MR.HP[,20]))
+M1.HP.median.data <- as.vector(as.matrix(M1.HP[,20]))
+M2.HP.median.data <- as.vector(as.matrix(M2.HP[,20]))
+
+MR.LP.median.data <- as.vector(as.matrix(MR.LP[,20]))
+M1.LP.median.data <- as.vector(as.matrix(M1.LP[,20]))
+M2.LP.median.data <- as.vector(as.matrix(M2.LP[,20]))
+
+all.median.data <- c(MR.HP.median.data,
+                     M1.HP.median.data,
+                     M2.HP.median.data,
+                     MR.LP.median.data,
+                     M1.LP.median.data,
+                     M2.LP.median.data)
+
+macrophage.type <- factor(c("MR","M1","M2"), levels = c("MR","M1","M2"))
+viral.strain <- c("HP", "LP")
+para.quantile <- factor( seq(0.025,0.975,by = 0.025), levels = seq(0.025,0.975,by = 0.025))
+
+
+
+macrophage.all.data.df <- data.frame(data = all.data,
+                                     M.type = rep(macrophage.type, each = length(MR.HP.data)),
+                                     viral.strain = rep(viral.strain, each = len_time * dm[2] * 3),
+                                     time = rep(t_ppc, dm[2]),
+                                     quantile = rep(para.quantile, each = len_time))
+
+macrophage.median.data.df <- data.frame(data = all.median.data,
+                                        M.type = rep(macrophage.type, each = len_time),
+                                        viral.strain = rep(viral.strain, each = len_time * 3),
+                                        time = t_ppc)
+
+
+
+
+
+
+textcol <- "black" 
+ggplot()+
+  #geom_ribbon(aes(ymin = low.quantile, ymax = upp.quantile, fill = "blue"), alpha = 0.5, na.rm = TRUE) +
+  geom_line(data = macrophage.all.data.df, aes(time, data, group = quantile), color = "grey", size = 1, alpha = 0.4) +
+  geom_line(data = macrophage.median.data.df, aes(time, data), color = "#d53e4f", size = 1, alpha = 0.8) +
+  theme(text = element_text(size = 20))  + 
+  theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "right") + 
+  # scale_color_manual( "",
+  #                     labels = c("Median"), 
+  #                     values=c("red"="red")) + 
+  xlim(0,10) + 
+  ylim(0,1) + 
+  facet_grid( viral.strain ~ M.type) + 
+  labs(x="Days post infection (p.i.)", y="Proportion", title="Detailed macrophage dynamics (H1N1)") + 
+  theme(legend.position="right", legend.direction="vertical",
+        legend.title=element_text(colour=textcol,size = 15),
+        legend.margin=margin(grid::unit(0, "cm")),
+        legend.text=element_text(colour=textcol, size= 15, face="bold"),
+        legend.key.height=grid::unit(0.4, "cm"),
+        legend.key.width=grid::unit(0.5, "cm"),
+        axis.text.x=element_text(size= 13, colour=textcol, angle = 0, face="bold"),
+        axis.text.y=element_text(size = 14, vjust=0.2, colour=textcol, face="bold"),
+        axis.ticks=element_line(size=0.4),
+        #plot.background=element_blank(),
+        #panel.border=element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=2),
+        plot.margin=margin(0.7, 0.4, 0.1, 0.2, "cm"),
+        plot.title=element_text(colour=textcol, hjust=0.5, size=15, face="bold"),
+        strip.text.x = element_text(size = 14, hjust = 0.5, face = "bold"),
+        strip.text.y = element_text(size = 14, hjust = 0.5, face = "bold"),
+        axis.line = element_line(colour = "black")) 
+
+
+
+
