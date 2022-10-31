@@ -1,0 +1,183 @@
+library(tidyverse)
+library(readxl)
+library(wesanderson)
+library(plyr)
+library(latex2exp)
+library(ggplot2)
+library(ggridges)
+library(viridis)
+library(hrbrthemes)
+library(dplyr)
+library(lattice)
+library(RColorBrewer)
+library(viridisLite)
+library(tibble)
+library(tidyr)
+library(gridExtra)
+library(latticeExtra)
+library(gtable) 
+options(warn=-1)
+
+
+Ratio.HP <- read_excel("~/Desktop/W3-revision-figures/Rplotdata/Target_HP_quantile.xls", col_names = as.character( seq(0.05,0.95, by = 0.05)))
+Ratio.LP <- read_excel("~/Desktop/W3-revision-figures/Rplotdata/Target_LP_quantile.xls", col_names = as.character( seq(0.05,0.95, by = 0.05)))
+
+
+time <- seq(0, 10, length.out = 241)
+strain <-   factor(c("HP", "LP"), 
+                   levels = c("HP", "LP"))
+
+# Ratio.HP.plot <- data.frame(time = time,
+#                             quantile25 = Ratio.HP$`1`,
+#                             quantile5 = Ratio.HP$`2`,
+#                             quantile50 = Ratio.HP$`3`,
+#                             quantile95 = Ratio.HP$`4`,
+#                             quantile975 = Ratio.HP$`5`)
+# 
+# 
+# 
+# 
+# ggplot(Ratio.HP.plot, aes(time))+
+#   geom_ribbon(aes(ymin = quantile25, ymax = quantile975, fill = "blue"), alpha = 0.4, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = quantile5, ymax = quantile95, fill = "blue2"), alpha = 0.6, na.rm = TRUE) +
+#   geom_line(data = Ratio.HP.plot, aes(time, quantile50, color = "red"), size = 2, alpha = 0.6) +
+#   theme_minimal() + 
+#   theme(plot.background=element_blank(),
+#         panel.border=element_blank(),
+#         panel.grid.major = element_blank(),
+#         axis.text.x = element_text(size = 25, face = "bold", color = "black"), 
+#         axis.title.x = element_text(size = 25, face = "bold", color = "black"),
+#         axis.text.y = element_text(size = 25, face = "bold", color = "black"), 
+#         axis.title.y = element_text(size = 25,face = "bold", color = "black"),
+#         plot.title = element_text(size = 25, face = "bold", color = "black", hjust = .5),
+#         legend.position="top", legend.direction="horizontal",
+#         legend.title=element_text(colour="black",size = 25,  face = "bold"),
+#         legend.text=element_text(colour="black", size = 25, face="bold"),
+#         legend.key.height=grid::unit(0.1, "mm"),
+#         legend.key.width=grid::unit(10, "mm")) + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+#   scale_fill_manual( "PI",
+#                      labels = c("95%", "90%"), 
+#                      values=c("blue"="deepskyblue1","blue2"="skyblue4")) + 
+#   scale_color_manual( "",
+#                       labels = c("median"),
+#                       values=c("red"="red")) +
+#   scale_x_continuous(limits = c(0,10),breaks=seq(0,10,by=2)) + 
+#   labs(title = TeX("$M\\Phi$ on viral clearance (HP,H1N1)"), y = "Proportion", x = "Days post infection (p.i.)" ) + 
+#   ylim(0,1)
+# 
+# 
+# Ratio.LP.plot <- data.frame(time = time,
+#                             quantile25 = Ratio.LP$`1`,
+#                             quantile5 = Ratio.LP$`2`,
+#                             quantile50 = Ratio.LP$`3`,
+#                             quantile95 = Ratio.LP$`4`,
+#                             quantile975 = Ratio.LP$`5`)
+# 
+# 
+# 
+# 
+# ggplot(Ratio.LP.plot, aes(time))+
+#   geom_ribbon(aes(ymin = quantile25, ymax = quantile975, fill = "blue"), alpha = 0.4, na.rm = TRUE) +
+#   geom_ribbon(aes(ymin = quantile5, ymax = quantile95, fill = "blue2"), alpha = 0.6, na.rm = TRUE) +
+#   geom_line(data = Ratio.LP.plot, aes(time, quantile50, color = "red"), size = 2, alpha = 0.6) +
+#   theme_minimal() + 
+#   theme(plot.background=element_blank(),
+#         panel.border=element_blank(),
+#         panel.grid.major = element_blank(),
+#         axis.text.x = element_text(size = 25, face = "bold", color = "black"), 
+#         axis.title.x = element_text(size = 25, face = "bold", color = "black"),
+#         axis.text.y = element_text(size = 25, face = "bold", color = "black"), 
+#         axis.title.y = element_text(size = 25,face = "bold", color = "black"),
+#         plot.title = element_text(size = 25, face = "bold", color = "black", hjust = .5),
+#         legend.position="top", legend.direction="horizontal",
+#         legend.title=element_text(colour="black",size = 25,  face = "bold"),
+#         legend.text=element_text(colour="black", size = 25, face="bold"),
+#         legend.key.height=grid::unit(0.1, "mm"),
+#         legend.key.width=grid::unit(10, "mm")) + 
+#   theme(legend.key = element_rect(fill = "white", colour = "white"), legend.position = "top") + 
+#   scale_fill_manual( "PI",
+#                      labels = c("95%", "90%"), 
+#                      values=c("blue"="deepskyblue1","blue2"="skyblue4")) + 
+#   scale_color_manual( "",
+#                       labels = c("median"),
+#                       values=c("red"="red")) +
+#   scale_x_continuous(limits = c(0,10),breaks=seq(0,10,by=2)) + 
+#   labs(title = TeX("$M\\Phi$ on viral clearance (LP,H1N1)"), y = "Proportion", x = "Days post infection (p.i.)" ) + 
+#   ylim(0,1)
+# 
+# 
+# 
+# 
+
+
+
+Ratio.plot <- data.frame(time = rep(time,2),
+                         quantile5 =   1 - c(Ratio.HP$`0.05`, Ratio.LP$`0.05`),
+                         quantile10 =  1- c(Ratio.HP$`0.1`, Ratio.LP$`0.1`),
+                         quantile15 =  1- c(Ratio.HP$`0.15`, Ratio.LP$`0.15`),
+                         quantile20 =  1- c(Ratio.HP$`0.2`, Ratio.LP$`0.2`),
+                         quantile25 =  1- c(Ratio.HP$`0.25`, Ratio.LP$`0.25`),
+                         quantile30 =  1- c(Ratio.HP$`0.3`, Ratio.LP$`0.3`),
+                         quantile35 =  1- c(Ratio.HP$`0.35`, Ratio.LP$`0.35`),
+                         quantile40 =  1- c(Ratio.HP$`0.4`, Ratio.LP$`0.4`),
+                         quantile45 =  1- c(Ratio.HP$`0.45`, Ratio.LP$`0.45`),
+                         quantile50 =  1- c(Ratio.HP$`0.5`, Ratio.LP$`0.5`),
+                         quantile55 =  1- c(Ratio.HP$`0.55`, Ratio.LP$`0.55`),
+                         quantile60 =  1- c(Ratio.HP$`0.6`, Ratio.LP$`0.6`),
+                         quantile65 =  1- c(Ratio.HP$`0.65`, Ratio.LP$`0.65`),
+                         quantile70 =  1- c(Ratio.HP$`0.7`, Ratio.LP$`0.7`),
+                         quantile75 =  1- c(Ratio.HP$`0.75`, Ratio.LP$`0.75`),
+                         quantile80 =  1- c(Ratio.HP$`0.8`, Ratio.LP$`0.8`),
+                         quantile85 =  1- c(Ratio.HP$`0.85`, Ratio.LP$`0.85`),
+                         quantile90 =  1- c(Ratio.HP$`0.9`, Ratio.LP$`0.9`),
+                         quantile95 =  1- c(Ratio.HP$`0.95`, Ratio.LP$`0.95`),
+                         strain = rep(strain, each = 241))
+
+
+
+
+ratio.plot <- ggplot(Ratio.plot, aes(time))+
+  geom_ribbon(aes(ymin = quantile5,  ymax = quantile95, fill = "90%"),  alpha = 1, na.rm = TRUE) +
+  geom_ribbon(aes(ymin = quantile10, ymax = quantile90, fill = "80%"), alpha = 1, na.rm = TRUE) +
+  geom_ribbon(aes(ymin = quantile15, ymax = quantile85, fill = "70%"), alpha = 1, na.rm = TRUE) +
+  geom_ribbon(aes(ymin = quantile20,  ymax = quantile80, fill = "60%"),  alpha = 1, na.rm = TRUE) +
+  geom_ribbon(aes(ymin = quantile25, ymax = quantile75, fill = "50%"), alpha = 1, na.rm = TRUE) +
+  geom_ribbon(aes(ymin = quantile30, ymax = quantile70, fill = "40%"), alpha = 1, na.rm = TRUE) +
+  geom_ribbon(aes(ymin = quantile35,  ymax = quantile65, fill = "30%"),  alpha = 1, na.rm = TRUE) +
+  geom_ribbon(aes(ymin = quantile40, ymax = quantile60, fill = "20%"), alpha = 1, na.rm = TRUE) +
+  geom_ribbon(aes(ymin = quantile45, ymax = quantile55, fill = "10%"), alpha = 1, na.rm = TRUE) +
+  geom_line(data = Ratio.plot, aes(time, quantile50), color = "purple", size = 1, alpha = 1, linetype = "solid") +
+  theme_classic() + 
+  theme(plot.background=element_blank(),
+        panel.border=element_blank(),
+        #panel.grid.major = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 20, face = "bold", color = "black"), 
+        axis.title.x = element_text(size = 20, face = "bold", color = "black"),
+        axis.text.y = element_text(size = 20, face = "bold", color = "black"), 
+        axis.title.y = element_text(size = 20,face = "bold", color = "black"),
+        plot.title = element_text(size = 20, face = "bold", color = "black", hjust = .5),
+        legend.position="right", legend.direction="vertical",
+        legend.title=element_text(colour="black",size = 15,  face = "bold"),
+        legend.text=element_text(colour="black", size = 15, face="bold"),
+        legend.key.height=grid::unit(8, "mm"),
+        legend.key.width=grid::unit(4, "mm"),
+        strip.text.x = element_text(size = 20, color = "black", face = "bold")) +
+  scale_fill_brewer(palette = "Blues", direction  = -1, type = "sequential")  +
+  #geom_hline(aes(yintercept = 1),
+  #           linetype = "dashed", color = "black", size = 1) +
+  labs(fill="PI") + 
+  scale_x_continuous(limits = c(0,10),breaks=seq(0,10,by = 2)) + 
+  labs(title = " Epithelium loss during infection (H1N1)", y = TeX("$1 - (T+R)/T_{0}"), x = "Days post infection (p.i.)" ) + 
+  facet_wrap(~strain, nrow = 1,scales = "free") 
+ 
+
+  
+
+ratio.plot
+
+
+
+
