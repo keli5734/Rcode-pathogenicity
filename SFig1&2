@@ -1,0 +1,566 @@
+rm(list=ls())  # clear memory
+
+
+library(tidyverse)
+library(bayesplot)
+library(deSolve)
+library(readxl)
+library(wesanderson)
+library(plyr)
+library(latex2exp)
+
+
+fit_H5N1 <- readRDS("~/Desktop/DDE-macrophages/GlobalSensitivityAnalysis/case study_fit both/H5N1/fit_Model_H5N1_fixed_latent.rds")
+
+posterior_samples_all.HP = rstan::extract(fit_H5N1, pars = c("log10_theta_HP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.HP = rstan::extract(fit_H5N1, pars = c("log10_theta_HP"))
+
+posterior_samples_all.LP = rstan::extract(fit_H5N1, pars = c("log10_theta_LP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.LP = rstan::extract(fit_H5N1, pars = c("log10_theta_LP"))
+
+
+
+
+
+fit_H1N1 <- readRDS("~/Desktop/OneDrive - The University of Melbourne/work3/R code/fit_Model_H1N1_2710.rds")
+
+
+posterior_samples_all.HP = rstan::extract(fit_H1N1, pars = c("log10_theta_HP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.HP = rstan::extract(fit_H1N1, pars = c("log10_theta_HP"))
+
+posterior_samples_all.LP = rstan::extract(fit_H1N1, pars = c("log10_theta_LP"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samplesMerged_after_burnin.LP = rstan::extract(fit_H1N1, pars = c("log10_theta_LP"))
+
+
+# show markov chains
+#library(bayesplot)
+#color_scheme_set("brewer-Spectral")
+#mcmc_trace(posterior_samples_all, n_warmup = 1000,
+#           facet_args = list(nrow = 2))
+
+
+
+# show all marginal posterior distributions
+posterior_sample_table.HP <-   data.frame(sV = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,1],
+                                          beta = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,2],
+                                          q_FI = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,3],
+                                          q_FM = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,4],
+                                          kappa_A = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,5],
+                                          sM = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,6],
+                                          q_prime = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,7],
+                                          V0 = posterior_samplesMerged_after_burnin.HP$log10_theta_HP[,8])
+
+
+
+
+posterior_sample_table.LP <-   data.frame(sV = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,1],
+                                          beta = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,2],
+                                          q_FI = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,3],
+                                          q_FM = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,4],
+                                          kappa_A = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,5],
+                                          q_prime = posterior_samplesMerged_after_burnin.LP$log10_theta_LP[,6])
+
+
+
+Type <- as.character(c("HP", "LP"),
+                     levels = c("HP", "LP"))
+
+# s_V
+sV.HP <-  posterior_sample_table.HP$sV
+sV.LP <- posterior_sample_table.LP$sV
+sV.df <- data.frame(sV = c(sV.HP, sV.LP), type = c(rep(Type, each = length(sV.HP))))
+sV.mu <- ddply(sV.df, "type", summarise, grp.mean=mean(sV))
+sV.median <- ddply(sV.df,"type", summarise, grp.median = quantile(sV, 0.5))
+# check mean value and median value 
+#head(sV.mu)
+#head(sV.median)
+ggplot(sV.df, aes(x=sV, color=type)) +
+  geom_histogram(aes(y = ..density..), bins = 50, position="identity", alpha = 0.6, fill = "white")+
+  geom_vline(data = sV.median, aes(xintercept = grp.median, color = type),
+             linetype = 'dashed') + 
+  #geom_vline(aes(xintercept=log10(10)),
+  #           linetype="solid", color = "red") + 
+  stat_function(fun = function(x) {dnorm(x, -1, 2)}, color = 'black') +
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 30), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(s_v)$")) + xlim(c(-10,6)) + 
+  annotate("Text", x= 0.1, y= 1.5, label= as.character(round(sV.median$grp.median[1],2)), parse=FALSE, size = 8) + 
+  annotate("Text", x= 3, y= 1.5, label= as.character(round(sV.median$grp.median[2],2)), parse=FALSE, size = 8) 
+
+
+
+
+
+# beta
+beta.HP <-  posterior_sample_table.HP$beta
+beta.LP <- posterior_sample_table.LP$beta
+beta.df <- data.frame(beta = c(beta.HP, beta.LP), type = c(rep(Type, each = length(beta.HP))))
+beta.mu <- ddply(beta.df, "type", summarise, grp.mean=mean(beta))
+beta.median <- ddply(beta.df,"type", summarise, grp.median = quantile(beta, 0.5))
+
+ggplot(beta.df, aes(x=beta, color=type)) +
+  geom_histogram(aes(y = ..density..), bins = 50, position="identity", alpha = 0.6, fill = "white")+
+  geom_vline(data = beta.median, aes(xintercept = grp.median, color = type),
+             linetype = 'dashed') + 
+  #geom_vline(aes(xintercept=log10(3e-8)),
+  #           linetype="solid", color = "red") + 
+  stat_function(fun = function(x) {dnorm(x, -6, 3)}, color = 'black') +
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 30), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(\\beta)$")) + xlim(c(-10,-5)) + 
+  annotate("Text", x= -7, y= 3,label= as.character(round(beta.median$grp.median[1],2)), parse=FALSE, size = 8) + 
+  annotate("Text", x= -8, y= 3, label= as.character(round(beta.median$grp.median[2],2)), parse=FALSE, size = 8) 
+
+
+
+# q_FI 
+qFI.HP <-  posterior_sample_table.HP$q_FI
+qFI.LP <- posterior_sample_table.LP$q_FI
+qFI.df <- data.frame(qFI = c(qFI.HP, qFI.LP), type = c(rep(Type, each = length(qFI.HP))))
+qFI.mu <- ddply(qFI.df, "type", summarise, grp.mean=mean(qFI))
+qFI.median <- ddply(qFI.df,"type", summarise, grp.median = quantile(qFI, 0.5))
+
+ggplot(qFI.df, aes(x=qFI, color=type)) +
+  geom_histogram(aes(y = ..density..), bins = 50, position="identity", alpha = 0.4, fill = "white")+
+  geom_vline(data = qFI.median, aes(xintercept = grp.median, color = type),
+             linetype = 'dashed') + 
+  #geom_vline(aes(xintercept=log10(2e-5)),
+  #           linetype="solid", color = "red") + 
+  stat_function(fun = function(x) {dnorm(x, -5, 3)}, color = 'black') +
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 30), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(\\q_{FI})$")) + xlim(c(-15,2)) +  
+  annotate("Text", x= -5, y= 1.5, label= as.character(round(qFI.median$grp.median[1],2)), parse=FALSE, size = 8) + 
+  annotate("Text", x= -1, y= 1.5, label= as.character(round(qFI.median$grp.median[2],2)), parse=FALSE, size = 8) 
+
+
+
+
+#q_FM
+qFM.HP <-  posterior_sample_table.HP$q_FM
+qFM.LP <- posterior_sample_table.LP$q_FM
+qFM.df <- data.frame(qFM = c(qFM.HP, qFM.LP), type = c(rep(Type, each = length(qFM.HP))))
+qFM.mu <- ddply(qFM.df, "type", summarise, grp.mean=mean(qFM))
+qFM.median <- ddply(qFM.df,"type", summarise, grp.median = quantile(qFM, 0.5))
+
+ggplot(qFM.df, aes(x=qFM, color=type)) +
+  geom_histogram(aes(y = ..density..), bins = 50, position="identity", alpha = 0.2, fill = "white")+
+  geom_vline(data = qFM.median, aes(xintercept = grp.median, color = type),
+             linetype = 'dashed') + 
+  #geom_vline(aes(xintercept=log10(4e-7)),
+  #           linetype="solid", color = "red") + 
+  stat_function(fun = function(x) {dnorm(x, -7, 3)}, color = 'black') +
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 30), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(\\q_{FM})$")) + xlim(c(-20,10)) +
+  annotate("Text", x= -10, y= 0.3, label= as.character(round(qFM.median$grp.median[1],2)), parse=FALSE, size = 8) + 
+  annotate("Text", x= -3.5, y= 0.3, label= as.character(round(qFM.median$grp.median[2],2)), parse=FALSE, size = 8) 
+
+
+
+
+
+#kappa_AS
+kappa_A.HP <-  posterior_sample_table.HP$kappa_A
+kappa_A.LP <- posterior_sample_table.LP$kappa_A
+kappa_A.df <- data.frame(kappa_A = c(kappa_A.HP, kappa_A.LP), type = c(rep(Type, each = length(kappa_A.HP))))
+kappa_A.mu <- ddply(kappa_A.df, "type", summarise, grp.mean=mean(kappa_A))
+kappa_A.median <- ddply(kappa_A.df,"type", summarise, grp.median = quantile(kappa_A, 0.5))
+
+ggplot(kappa_A.df, aes(x=kappa_A, color=type)) +
+  geom_histogram(aes(y = ..density..), bins = 50, position="identity", alpha = 0.4, fill = "white")+
+  geom_vline(data = kappa_A.median, aes(xintercept = grp.median, color = type),
+             linetype = 'dashed') + 
+  #geom_vline(aes(xintercept=log10(1e-6)),
+  #           linetype="solid", color = "red") + 
+  stat_function(fun = function(x) {dnorm(x, 2, 1)}, color = 'black') +
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 30), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(\\kappa_{A})$")) + xlim(c(-4,6)) +
+  annotate("Text", x= 2, y= 1,  label= as.character(round(kappa_A.median$grp.median[1],2)), parse=FALSE, size = 8) + 
+  annotate("Text", x= 0, y= 1,  label= as.character(round(kappa_A.median$grp.median[2],2)), parse=FALSE, size = 8) 
+
+
+
+
+
+
+
+#V0
+V0.HP <-  posterior_sample_table.HP$V0
+V0.LP <- posterior_sample_table.HP$V0
+V0.df <- data.frame(V0 = c(V0.HP, V0.LP), type = c(rep(Type, each = length(V0.HP))))
+V0.mu <- ddply(V0.df, "type", summarise, grp.mean=mean(V0))
+V0.median <- ddply(V0.df,"type", summarise, grp.median = quantile(V0, 0.5))
+
+ggplot(V0.df, aes(x=V0, color=type)) +
+  geom_histogram(aes(y = ..density..), bins = 50, position="identity", alpha = 0.4, fill = "white")+
+  geom_vline(data = V0.median, aes(xintercept = grp.median, color = type),
+             linetype = 'dashed') + 
+  #geom_vline(aes(xintercept=log10(1e-6)),
+  #           linetype="solid", color = "red") + 
+  stat_function(fun = function(x) {dnorm(x, 1, 1)}, color = 'black') +
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 30), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(V_0)$")) + xlim(c(-6,6)) + 
+  annotate("Text", x= 0, y= 0.75, label= as.character(round(V0.median$grp.median[1],2)), parse=FALSE, size = 8)  + 
+  theme(legend.position = "none")
+
+#annotate("Text", x= 0, y= 1, label= "-0.06", parse=FALSE, size = 7) 
+
+
+
+
+
+
+# calculate R0 
+R0.HP <- 10^beta.HP * 210 * 7e+7 / (2 * (5 + 10^posterior_sample_table.HP$q_prime * 10^posterior_sample_table.HP$sM))
+R0.LP <- 10^beta.LP * 210* 7e+7 / (2 * (5 + 10^posterior_sample_table.LP$q_prime * 10^posterior_sample_table.HP$sM))
+
+
+R0.df <- data.frame(R0 = c(R0.HP, R0.LP), type = c(rep(Type, c(length(R0.HP), length(R0.LP))) ))
+R0.mu <- ddply(R0.df, "type", summarise, grp.mean=mean(R0))
+R0.median <- ddply(R0.df,"type", summarise, grp.median = quantile(R0, 0.5))
+
+
+ggplot(R0.df, aes(x=R0, color=type)) +
+  geom_histogram(aes(y = ..density..), bins = 200, position="identity", alpha = 0.6, fill = "white")+
+  geom_vline(data = R0.median, aes(xintercept = grp.median, color = type),
+             linetype = 'dashed') + 
+  geom_vline(aes(xintercept=1),
+             linetype="dashed", color = "blue") + 
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 25), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$R_0$")) + xlim(c(0,150)) + 
+  #annotate("Text", x= 2.9, y= 1, label= " 3.42", parse=FALSE, size = 7) + 
+  #annotate("Text", x= 4.3, y= 1, label= "3.76", parse=FALSE, size = 7)  + 
+  annotate("Text", x= 1, y= 1, label= "R0 = 1", parse=FALSE, size = 7) 
+
+
+
+
+#sM
+sM.HP <-  posterior_sample_table.HP$sM
+sM.LP <- posterior_sample_table.HP$sM
+sM.df <- data.frame(sM = c(sM.HP, sM.LP), type = c(rep(Type, each = length(sM.HP))))
+sM.mu <- ddply(sM.df, "type", summarise, grp.mean=mean(sM))
+sM.median <- ddply(sM.df,"type", summarise, grp.median = quantile(sM, 0.5))
+
+ggplot(sM.df, aes(x=sM, color=type)) +
+  geom_histogram(aes(y = ..density..), bins = 50, position="identity", alpha = 0.4, fill = "white")+
+  geom_vline(data = sM.median, aes(xintercept = grp.median, color = type),
+             linetype = 'dashed') + 
+  #geom_vline(aes(xintercept=log10(1e-6)),
+  #           linetype="solid", color = "red") + 
+  stat_function(fun = function(x) {dnorm(x, 2, 1)}, color = 'black') +
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 30), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(\\s_M)$")) + xlim(c(-2,6)) + 
+  annotate("Text", x= 2, y= 1.5, label= as.character(round(sM.median$grp.median[1],2)), parse=FALSE, size = 8) + 
+  theme(legend.position = "none")
+
+
+
+
+
+
+
+# qprime
+qprime.HP <-  posterior_sample_table.HP$q_prime
+qprime.LP <- posterior_sample_table.LP$q_prime
+qprime.df <- data.frame(qprime = c(qprime.HP, qprime.LP), strain = c(rep(Type, each = length(qprime.HP))))
+qprime.mu <- ddply(qprime.df, "strain", summarise, grp.mean=mean(qprime))
+qprime.median <- ddply(qprime.df,"strain", summarise, grp.median = quantile(qprime, 0.5))
+qprime.975 <- ddply(qprime.df, "strain", summarise, grp.quantile = quantile(qprime, c(0.95,0.975)))
+# check mean value and median value 
+#head(qprime.mu)
+#head(qprime.median)
+p.qprime <- ggplot(qprime.df, aes(x=qprime, color=strain)) +
+  geom_histogram(aes(y = ..density..), bins = 50, position="identity", alpha = 0.6, fill = "white") +
+  geom_vline(data = qprime.median, aes(xintercept = grp.median, color = strain),
+             linetype = 'dashed') + 
+  # geom_vline(aes(xintercept=-5.2),
+  #           linetype="dashed", color = "#ae3918") + 
+  # geom_vline(aes(xintercept=-7.5),
+  #            linetype="dashed", color = "#49997c") + 
+  stat_function(fun = function(x) {dnorm(x, -6, 3)}, color = 'black') +
+  scale_color_brewer(palette="Accent") + 
+  theme_minimal() + 
+  theme(text = element_text(size = 30), 
+        panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(q^{\\prime})$")) + xlim(c(-20,3)) +
+  annotate("Text", x= -5, y= 0.4, label= as.character(round(qprime.median$grp.median[1],2)), parse=FALSE, size = 8) + 
+  annotate("Text", x= -10, y= 0.4, label= as.character(round(qprime.median$grp.median[2],2)), parse=FALSE, size = 8) 
+
+p.qprime
+
+p.qprime.insert <- p.qprime + theme(legend.position="top",
+                                    legend.key.height=grid::unit(0.2, "cm"),
+                                    legend.key.width=grid::unit(0.2, "cm"),
+               plot.background=element_blank(),
+               panel.border=element_blank(),
+               panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+               axis.title.x=element_blank(),
+               axis.title.y=element_blank(),
+               axis.text.y=element_blank(),
+               axis.text.x = element_text(size = 10)) 
+
+
+p.qprime.insert
+
+
+
+
+
+
+
+# qprime.insert.plot
+qprime.HP <-  posterior_sample_table.HP$q_prime
+qprime.LP <- posterior_sample_table.LP$q_prime
+color.indx.HP = c()
+color.indx.LP = c()
+for (i in 1:6000){
+  if (qprime.HP[i] >=-5.2 ){
+    color.indx.HP[i] = "2"
+  }
+  else {
+    color.indx.HP[i] = "1"
+  }
+  
+}
+
+for (i in 1:6000){
+  if (qprime.LP[i] >=-5.2 ){
+    color.indx.LP[i] = "2"
+  }
+  else {
+    color.indx.LP[i] = "1"
+  }
+  
+}
+qprime.HP.df <- data.frame(qprime = c(qprime.HP), quantile = color.indx.HP)
+qprime.LP.df <- data.frame(qprime = c(qprime.LP), quantile = color.indx.LP)
+
+p.qprime.HP <- ggplot(qprime.HP.df, aes(x=qprime), color = "grey") +
+  geom_histogram(aes(y = ..density..), bins = 200, position="identity", alpha = 0.6)+
+  #geom_vline(data = qprime.median, aes(xintercept = grp.median, color = strain),
+  #           linetype = 'dashed') + 
+  # geom_vline(aes(xintercept=-5.2),
+  #            linetype="dashed", color = "#ae3918") + 
+  # geom_vline(aes(xintercept=-7.5),
+  #            linetype="dashed", color = "#ae3918") + 
+  #stat_function(fun = function(x) {dnorm(x, -6, 3)}, color = 'black') +
+  #scale_color_brewer(palette="Accent") + 
+  theme_classic() + 
+  #theme(text = element_text(size = 25), 
+  #     panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(q^{\\prime})$")) + xlim(c(-20,3)) +
+  scale_x_continuous(limits = c(-20,3), breaks=seq(-15,-2,by=5),labels=c( "-15", "-10", "-5") ) 
+ # annotate("Text", x= -6.8, y = 0.25, label= " -7.5", parse=FALSE, size = 7) 
+
+#annotate("Text", x= -9.5, y= 0.4, label= "-7.60", parse=FALSE, size = 7) 
+
+p.qprime.HP
+
+p.qprime.insert1 <- p.qprime.HP + theme(plot.background=element_blank(),
+                                    panel.grid.major = element_blank(), 
+                                    panel.grid.minor = element_blank(),
+                                    axis.title.x=element_text(size=10),
+                                    axis.title.y=element_text(size=10),
+                                    axis.text.y=element_blank(),
+                                    axis.text.x = element_text(size = 10)) + 
+  labs(y = "Density", x =TeX("$\\log_{10}(q^{\\prime})$")) 
+
+
+p.qprime.insert1
+
+
+p.qprime.LP <- ggplot(qprime.LP.df, aes(x=qprime), color = "grey") +
+  geom_histogram(aes(y = ..density..), bins = 200, position="identity", alpha = 0.6)+
+  #geom_vline(data = qprime.median, aes(xintercept = grp.median, color = strain),
+  #           linetype = 'dashed') + 
+  # geom_vline(aes(xintercept=-5.2),
+  #            linetype="dashed", color = "#ae3918") + 
+  # geom_vline(aes(xintercept=-7.5),
+  #            linetype="dashed", color = "#ae3918") + 
+  #stat_function(fun = function(x) {dnorm(x, -6, 3)}, color = 'black') +
+  #scale_color_brewer(palette="Accent") + 
+  theme_classic() + 
+  #theme(text = element_text(size = 25), 
+  #     panel.grid.major = element_blank()) + 
+  labs(y = "Density") + xlab(TeX("$\\log_{10}(q^{\\prime})$")) + xlim(c(-20,3)) +
+  scale_x_continuous(limits = c(-20,3), breaks=seq(-15,-2,by=5),labels=c( "-15", "-10", "-5") ) 
+  #annotate("Text", x= -6.8, y = 0.28, label= " -7.5", parse=FALSE, size = 7) 
+#annotate("Text", x= -9.5, y= 0.4, label= "-7.60", parse=FALSE, size = 7) 
+
+p.qprime.LP
+
+p.qprime.insert2 <- p.qprime.LP + theme(plot.background=element_blank(),
+                                        panel.grid.major = element_blank(), 
+                                        panel.grid.minor = element_blank(),
+                                        axis.title.x=element_text(size=10),
+                                        axis.title.y=element_text(size=10),
+                                        axis.text.y=element_blank(),
+                                        axis.text.x = element_text(size = 10)) + 
+  labs(y = "Density", x =TeX("$\\log_{10}(q^{\\prime})$")) 
+
+
+
+p.qprime.insert2
+
+
+
+
+
+
+
+
+
+# # beta comparsion 
+# beta.HP <-  10^posterior_sample_table.HP$beta
+# beta.LP <- 10^posterior_sample_table.LP$beta
+# beta.comparison <-  log10(beta.HP / beta.LP)
+# beta.comparsion.median <- median(beta.comparison,na.rm = TRUE)
+# beta.comparison.df <- data.frame(beta = beta.comparison, above = beta.comparison > 0)
+# 
+# ggplot(beta.comparison.df, aes(x=beta)) +
+#   geom_histogram(aes(y = ..density..), bins = 200, alpha = 0.3, fill = "cornflowerblue")+
+#   #geom_density() + 
+#   scale_color_brewer(palette="Accent") + 
+#   geom_vline(aes(xintercept=beta.comparsion.median),
+#              linetype="dashed", color = "blue", alpha = 0.7) + 
+#   theme_minimal() + 
+#   theme(axis.text.x = element_text(size = 40, face = "bold", color = "black"), 
+#         axis.title.x =  element_text(size = 50, face = "bold", color = "black"),
+#         axis.text.y = element_text(size = 40, face = "bold", color = "black"), 
+#         axis.title.y = element_text(size = 40,face = "bold", color = "black"),
+#         panel.grid.minor = element_blank()) + 
+#   labs(y = "Density") + xlab(TeX("$\\log_{10}(\\beta_{HP}/ \\beta_{LP})$")) + 
+#   xlim(c(0,1.5)) 
+#   #theme(panel.grid.major = element_blank(),
+#   #      panel.grid.minor = element_blank()) 
+#   #annotate("Text", x = beta.comparsion.median , y = 3.5,label= as.character(round(beta.comparsion.median,2)), parse=FALSE, size = 14) 
+# 
+# beta.proprtion <- length(beta.comparison[beta.comparison <=0]) / length(beta.comparison) * 100
+
+
+
+
+# beta comparsion 
+beta.HP <-  10^posterior_sample_table.HP$beta
+beta.LP <- 10^posterior_sample_table.LP$beta
+beta.comparison <-  log10(beta.HP / beta.LP)
+beta.comparsion.median <- median(beta.comparison,na.rm = TRUE)
+beta.comparison.df <- data.frame(beta = beta.comparison)
+
+
+  ggplot(beta.comparison.df, aes(x=beta)) +
+  geom_histogram(aes(y = stat(count) / max(count) ), bins = 20, alpha = 0.5, fill = "cornflowerblue") +
+  stat_ecdf(aes(beta, color = "tan2"), geom = "step", lwd = 1.2) + 
+  geom_vline(aes(xintercept=beta.comparsion.median),
+             linetype="dashed", color = "blue", alpha = 0.7) + 
+  theme_minimal() + 
+    theme(axis.text.x = element_text(size = 40, face = "bold", color = "black"), 
+          axis.title.x =  element_text(size = 50, face = "bold", color = "black"),
+          axis.text.y = element_text(size = 40, face = "bold", color = "black"), 
+          axis.title.y = element_text(size = 40,face = "bold", color = "black"),
+          panel.grid.minor = element_blank(),
+          legend.position = "right",
+          legend.text = element_text(size = 35,face = "bold", color = "black"),
+          legend.key.height=grid::unit(5, "mm"),
+          legend.key.width=grid::unit(1, "cm")) + 
+  labs(y = "Frequency") + xlab(TeX("$\\log_{10}(\\beta_{HP}/ \\beta_{LP})$")) + 
+  xlim(c(-0.5,1.5)) + 
+  scale_color_manual( name = NULL,
+                      values = c("tan2" = "tan2"),
+                      labels = "CDF") + 
+  annotate("Text", x = beta.comparsion.median , y = 1,label= as.character(round(beta.comparsion.median,2)), parse=FALSE, size = 14) 
+  
+
+beta.proprtion <- length(beta.comparison[beta.comparison <=0]) / length(beta.comparison) * 100
+
+
+
+# q_FI comparison  
+qFI.HP <-  10^posterior_sample_table.HP$q_FI
+qFI.LP <- 10^posterior_sample_table.LP$q_FI
+qFI.comparison <-  log10(qFI.HP / qFI.LP)
+
+
+qFI.comparison.df <- data.frame(qFI = qFI.comparison)
+qFI.comparsion.median <- median(qFI.comparison,na.rm = TRUE)
+ggplot(qFI.comparison.df, aes(x=qFI)) +
+  geom_histogram(aes(y = stat(count) / max(count) ), bins = 20, alpha = 0.5, fill = "cornflowerblue") +
+  stat_ecdf(aes(qFI, color = "tan2"), geom = "step", lwd = 1, alpha = .8) + 
+  geom_vline(aes(xintercept=qFI.comparsion.median),
+             linetype="dashed", color = "blue", alpha = 0.7) + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(size = 40, face = "bold", color = "black"), 
+        axis.title.x =  element_text(size = 50, face = "bold", color = "black"),
+        axis.text.y = element_text(size = 40, face = "bold", color = "black"), 
+        axis.title.y = element_text(size = 40,face = "bold", color = "black"),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        legend.text = element_text(size = 35,face = "bold", color = "black"),
+        legend.key.height=grid::unit(5, "mm"),
+        legend.key.width=grid::unit(1, "cm")) + 
+  labs(y = "Frequency") + xlab(TeX("$\\log_{10}(\\q_{FI,HP}/ \\q_{FI,LP})$")) + 
+  xlim(c(-5,2)) + 
+  scale_color_manual( name = NULL,
+                      values = c("tan2" = "tan2"),
+                      labels = "CDF") + 
+  annotate("Text", x = qFI.comparsion.median , y = 1, label= as.character(round(qFI.comparsion.median,2)), parse=FALSE, size = 14) 
+
+qFI.proprtion <- length(qFI.comparison[qFI.comparison <=0]) / length(qFI.comparison) * 100
+
+
+
+
+
+
+# q_FM comparison  
+qFM.HP <-  10^posterior_sample_table.HP$q_FM
+qFM.LP <- 10^posterior_sample_table.LP$q_FM
+qFM.comparison <-  log10(qFM.HP / qFM.LP)
+qFM.comparison.df <- data.frame(qFM = qFM.comparison)
+qFM.comparsion.median <- median(qFM.comparison,na.rm = TRUE)
+ggplot(qFM.comparison.df, aes(x=qFM)) +
+  geom_histogram(aes(y = stat(count) / max(count) ), bins = 20, alpha = 0.5, fill = "cornflowerblue") +
+  stat_ecdf(aes(qFM, color = "tan2"), geom = "step", lwd = 1, alpha = .8) + 
+  geom_vline(aes(xintercept = qFM.comparsion.median),
+             linetype="dashed", color = "blue", alpha = 0.7) + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(size = 40, face = "bold", color = "black"), 
+        axis.title.x =  element_text(size = 50, face = "bold", color = "black"),
+        axis.text.y = element_text(size = 40, face = "bold", color = "black"), 
+        axis.title.y = element_text(size = 40,face = "bold", color = "black"),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        legend.text = element_text(size = 35,face = "bold", color = "black"),
+        legend.key.height=grid::unit(5, "mm"),
+        legend.key.width=grid::unit(1, "cm")) + 
+  labs(y = "Frequency") + xlab(TeX("$\\log_{10}(\\q_{FM,HP}/ \\q_{FM,LP})$")) + 
+  xlim(c(-10,10)) + 
+  annotate("Text", x = qFM.comparsion.median , y = 1, label= as.character(round(qFM.comparsion.median,2)), parse=FALSE, size = 14) + 
+  scale_color_manual( name = NULL,
+                        values = c("tan2" = "tan2"),
+                        labels = "CDF") 
+
+qFM.proprtion <- length(qFM.comparison[qFM.comparison <=0]) / length(qFM.comparison) * 100
+
